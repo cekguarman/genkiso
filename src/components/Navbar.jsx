@@ -9,7 +9,8 @@ import {
   MonitorPlay,
   Sun,
   Moon,
-  Sidebar as SidebarIcon
+  Sidebar as SidebarIcon,
+  BookOpen
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -19,6 +20,7 @@ export default function Navbar({
   setApiKey, 
   onOpenKuis, 
   onOpenTKA,
+  onOpenPetunjuk,
   hasGeneratedQuestions,
   isDarkMode,
   onToggleDarkMode,
@@ -111,6 +113,16 @@ export default function Navbar({
               >
                 <MonitorPlay className="w-4 h-4" />
                 <span>Simulator TKA</span>
+              </button>
+
+              {/* TOMBOL BUKU PANDUAN PENGGUNAAN */}
+              <button
+                onClick={onOpenPetunjuk}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-900 dark:text-purple-300 border border-purple-200/80 dark:border-purple-800 shadow-2xs"
+                title="Buka Buku Petunjuk Lengkap Penggunaan Aplikasi"
+              >
+                <BookOpen className="w-4 h-4 text-maroon-700 dark:text-purple-400" />
+                <span className="hidden sm:inline">Petunjuk</span>
               </button>
 
               {/* TOGGLE TEMA TERANG / GELAP */}

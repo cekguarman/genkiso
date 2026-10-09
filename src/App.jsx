@@ -10,6 +10,8 @@ import TabAnalisisSoal from './components/TabAnalisisSoal';
 import TabAnalisisNilai from './components/TabAnalisisNilai';
 import ModalKuisInteraktif from './components/ModalKuisInteraktif';
 import ModalSimulatorTKA from './components/ModalSimulatorTKA';
+import ModalProfilPengembang from './components/ModalProfilPengembang';
+import ModalPetunjukPenggunaan from './components/ModalPetunjukPenggunaan';
 
 import { DEFAULT_EXAM_CONFIG } from './data/curriculumData';
 import { generateQuestionsViaGemini } from './services/aiGenerator';
@@ -46,7 +48,8 @@ import {
   BarChart3,
   Gamepad2,
   MonitorPlay,
-  Key
+  Key,
+  BookOpen
 } from 'lucide-react';
 
 export default function App() {
@@ -78,9 +81,11 @@ export default function App() {
   const [analysisData, setAnalysisData] = useState(null);
   const [kkm, setKkm] = useState(75);
 
-  // Bonus Modals
+  // Modals
   const [showKuisModal, setShowKuisModal] = useState(false);
   const [showTKAModal, setShowTKAModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showPetunjukModal, setShowPetunjukModal] = useState(false);
 
   // Sinkronisasi Dark Mode class di HTML document root
   useEffect(() => {
@@ -237,6 +242,14 @@ export default function App() {
                 <MonitorPlay className="w-4 h-4 text-purple-600" />
                 <span>Simulator TKA CBT</span>
               </button>
+
+              <button
+                onClick={() => setShowPetunjukModal(true)}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-purple-900 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 border border-purple-200/80 dark:border-purple-800 transition-all text-left shadow-2xs"
+              >
+                <BookOpen className="w-4 h-4 text-maroon-700 dark:text-purple-400" />
+                <span>Buku Petunjuk Aplikasi</span>
+              </button>
             </nav>
 
             {/* Profil Ujian Aktif Ringkas */}
@@ -290,6 +303,7 @@ export default function App() {
           setApiKey={setApiKey}
           onOpenKuis={() => setShowKuisModal(true)}
           onOpenTKA={() => setShowTKAModal(true)}
+          onOpenPetunjuk={() => setShowPetunjukModal(true)}
           hasGeneratedQuestions={questions.length > 0}
           isDarkMode={isDarkMode}
           onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
@@ -578,15 +592,52 @@ export default function App() {
 
         {/* FOOTER APLIKASI (Tempat Utama Keterangan Pembuat Sesuai Instruksi User) */}
         <footer className="bg-white dark:bg-slate-900 border-t border-purple-200/80 dark:border-purple-900/50 mt-12 py-8 no-print shadow-xs transition-colors">
-          <div className="max-w-7xl mx-auto px-4 text-center space-y-1.5">
+          <div className="max-w-7xl mx-auto px-4 text-center space-y-2">
+            
             <div className="inline-flex items-center gap-2 text-maroon-900 dark:text-purple-300 font-bold text-base">
-              <Award className="w-5 h-5 text-amber-500" />
-              <span>Dibuat oleh Armansyah, S.Kom, M.Pd, Gr.</span>
+              <Award className="w-5 h-5 text-amber-500 shrink-0" />
+              <span className="text-slate-600 dark:text-slate-400 font-normal">Dibuat oleh</span>
+              {/* Hanya dapat diakses bila nama di klik saja */}
+              <button
+                type="button"
+                onClick={() => setShowProfileModal(true)}
+                className="font-extrabold text-maroon-800 dark:text-purple-300 hover:text-maroon-950 dark:hover:text-purple-100 underline decoration-purple-400 hover:decoration-maroon-700 decoration-2 underline-offset-4 transition-all cursor-pointer inline-flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded-md px-1 group"
+                title="Klik untuk membuka Profil Lengkap Armansyah, S.Kom, M.Pd, Gr."
+              >
+                <span>Armansyah, S.Kom, M.Pd, Gr.</span>
+                <span className="text-[10px] bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800 font-semibold group-hover:bg-purple-200 shadow-2xs">
+                  Lihat Profil
+                </span>
+              </button>
             </div>
-            <div className="text-sm font-medium text-slate-700 dark:text-slate-400">
+
+            <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
               Narasumber Koding & Kecerdasan Artifisial Nasional Kemendikdasmen 2025
             </div>
-            <p className="text-xs text-slate-400 dark:text-slate-500 pt-2">
+
+            {/* Tambahan Teks Sesuai Instruksi User */}
+            <div className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">
+              Guru Informatika/Koding & Kecerdasan Artifisial SMAN Sumatera Selatan
+            </div>
+
+            <div className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">
+              Ketua Umum MGMP Informatika Jenjang SMA Tingkat Provinsi Sumatera Selatan
+            </div>
+
+            {/* Tombol Akses Cepat Buku Petunjuk di Footer */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setShowPetunjukModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-800 dark:text-purple-300 text-xs font-bold border border-purple-200/80 dark:border-purple-800 transition-all shadow-2xs"
+                title="Buka Buku Panduan Penggunaan Lengkap"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-maroon-700 dark:text-purple-400" />
+                <span>Buka Petunjuk Penggunaan Aplikasi</span>
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400 dark:text-slate-500 pt-2 border-t border-purple-100/60 dark:border-slate-800 max-w-xl mx-auto">
               EduAsesmen AI • Platform Generator Soal, Kisi-Kisi, Kartu Soal, Analisis Butir Soal, Kuis Interaktif & Simulator TKA CBT
             </p>
           </div>
@@ -607,6 +658,23 @@ export default function App() {
           examConfig={examConfig}
           questions={questions}
           onClose={() => setShowTKAModal(false)}
+        />
+      )}
+
+      {/* Modal: Profil Lengkap Pengembang (Hanya tampil saat nama diklik) */}
+      {showProfileModal && (
+        <ModalProfilPengembang
+          onClose={() => setShowProfileModal(false)}
+        />
+      )}
+
+      {/* Modal: Petunjuk Lengkap Penggunaan Aplikasi */}
+      {showPetunjukModal && (
+        <ModalPetunjukPenggunaan
+          onClose={() => setShowPetunjukModal(false)}
+          onOpenApiKey={() => {
+            setShowPetunjukModal(false);
+          }}
         />
       )}
 
