@@ -13,6 +13,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { detectSubjectCategory, generateExactScienceSvg } from '../services/exactScienceGenerator';
 
 // Generator cerdas untuk memperluas bank soal hingga batas maksimum 50 butir soal
 const buildExamPool = (sourceQuestions, targetCount, config) => {
@@ -22,136 +23,276 @@ const buildExamPool = (sourceQuestions, targetCount, config) => {
   }
 
   const pool = [...sourceQuestions];
-  const topicBank = [
-    {
-      q: 'Manakah dari skenario berikut yang merepresentasikan penerapan teknik Dekomposisi dalam berpikir komputasional?',
-      opts: [
-        { key: 'A', text: 'Memecah program aplikasi kasir menjadi sub-modul inventaris barang, kalkulasi harga, dan cetak struk pembayaran.' },
-        { key: 'B', text: 'Mengabaikan jenis font teks saat merancang skema basis data relasional.' },
-        { key: 'C', text: 'Menghitung waktu eksekusi kode program per milidetik.' },
-        { key: 'D', text: 'Menggandakan seluruh berkas kode program ke server cadangan.' },
-        { key: 'E', text: 'Membuat tata letak antarmuka pengguna tanpa memikirkan fungsi tombol.' }
-      ],
-      ans: 'A',
-      exp: 'Dekomposisi adalah proses memecah permasalahan kompleks menjadi komponen-komponen sub-masalah yang lebih kecil dan terkelola.',
-      diff: 'Mudah',
-      lvl: 'C2'
-    },
-    {
-      q: 'Pada struktur data Tumpukan (Stack), elemen yang pertama kali dimasukkan akan dikeluarkan paling akhir (LIFO). Manakah implementasi fitur berikut yang beroperasi berdasarkan prinsip Stack?',
-      opts: [
-        { key: 'A', text: 'Fitur Undo dan Redo pada aplikasi text editor' },
-        { key: 'B', text: 'Antrean pencetakan dokumen di spooler printer kantor' },
-        { key: 'C', text: 'Pemutaran daftar lagu berurutan pada pemutar musik digital' },
-        { key: 'D', text: 'Sistem panggilan antrean nomor registrasi pasien rumah sakit' },
-        { key: 'E', text: 'Pengiriman pesan email masuk berurutan berdasarkan waktu pengiriman' }
-      ],
-      ans: 'A',
-      exp: 'Fitur Undo/Redo menyimpan riwayat aksi pengguna dalam struktur data Stack (LIFO), di mana aksi terakhir yang dilakukan akan dibatalkan pertama kali.',
-      diff: 'Sedang',
-      lvl: 'C3'
-    },
-    {
-      q: 'Diberikan larik (array) bilangan bulat: [29, 10, 14, 37, 13]. Jika diurutkan secara menaik (ascending) menggunakan Selection Sort pada putaran pertama, elemen terkecil akan ditukar dengan elemen berindeks ke-...',
-      opts: [
-        { key: 'A', text: '0 (elemen pertama)' },
-        { key: 'B', text: '1 (elemen kedua)' },
-        { key: 'C', text: '2 (elemen ketiga)' },
-        { key: 'D', text: '4 (elemen terakhir)' },
-        { key: 'E', text: 'Tidak ada penukaran posisi' }
-      ],
-      ans: 'A',
-      exp: 'Pada Selection Sort putaran pertama, sistem mencari nilai minimum di seluruh larik (angka 10) lalu menukarnya ke posisi paling awal (indeks 0).',
-      diff: 'Sedang',
-      lvl: 'C3'
-    },
-    {
-      q: 'Mengapa algoritma Binary Search memiliki kompleksitas waktu yang jauh lebih efisien O(log n) dibandingkan Linear Search O(n)?',
-      opts: [
-        { key: 'A', text: 'Binary Search membagi dua ruang pencarian secara berulang pada setiap tahap pembandingan.' },
-        { key: 'B', text: 'Binary Search tidak memerlukan memori tambahan saat eksekusi.' },
-        { key: 'C', text: 'Binary Search dapat mencari data tanpa perlu data diurutkan terlebih dahulu.' },
-        { key: 'D', text: 'Binary Search bekerja dengan cara memeriksa elemen dari dua sisi secara bersamaan.' },
-        { key: 'E', text: 'Binary Search hanya dapat memproses tipe data string singkat.' }
-      ],
-      ans: 'A',
-      exp: 'Dengan membagi ruang pencarian menjadi setengah pada setiap langkah, jumlah iterasi berkurang secara logaritmik terhadap ukuran data n.',
-      diff: 'Sulit',
-      lvl: 'C4'
-    },
-    {
-      q: 'Perhatikan tahapan berikut: (1) Menghilangkan detail warna mobil, (2) Hanya mencatat nomor plat dan tipe kendaraan, (3) Memetakan kepadatan jalan tol. Aktivitas nomor (1) dan (2) adalah perwujudan dari...',
-      opts: [
-        { key: 'A', text: 'Abstraksi' },
-        { key: 'B', text: 'Dekomposisi' },
-        { key: 'C', text: 'Pengenalan Pola' },
-        { key: 'D', text: 'Perancangan Algoritma' },
-        { key: 'E', text: 'Evaluasi Efisiensi' }
-      ],
-      ans: 'A',
-      exp: 'Abstraksi berfokus pada informasi penting yang relevan dan menyaring detail rincian yang tidak esensial.',
-      diff: 'Mudah',
-      lvl: 'C2'
-    },
-    {
-      q: 'Struktur data Antrean (Queue) beroperasi dengan prinsip FIFO (First In First Out). Sistem manakah berikut yang paling akurat merefleksikan kerja Queue?',
-      opts: [
-        { key: 'A', text: 'Sistem antrean penjadwalan prosesor (CPU scheduling) FIFO' },
-        { key: 'B', text: 'Tumpukan piring bersih di meja prasmanan' },
-        { key: 'C', text: 'Daftar panggilan telepon tak terjawab di ponsel' },
-        { key: 'D', text: 'Tombol kembali (Back) pada peramban web' },
-        { key: 'E', text: 'Penyimpanan tumpukan kontainer di dermaga pelabuhan' }
-      ],
-      ans: 'A',
-      exp: 'Antrean proses CPU FIFO melayani instruksi yang datang terlebih dahulu untuk diproses pertama kali sesuai konsep Queue.',
-      diff: 'Sedang',
-      lvl: 'C3'
-    },
-    {
-      q: 'Sebuah algoritma rekursif harus memiliki kondisi basis (base condition). Apa konsekuensi utama jika kondisi basis tidak pernah tercapai?',
-      opts: [
-        { key: 'A', text: 'Terjadi Stack Overflow error akibat pemanggilan fungsi tanpa henti' },
-        { key: 'B', text: 'Output program akan bernilai nol secara otomatis' },
-        { key: 'C', text: 'Data masukan akan terhapus dari media penyimpanan' },
-        { key: 'D', text: 'Kecepatan pemrosesan komputer meningkat dua kali lipat' },
-        { key: 'E', text: 'Compiler akan mengabaikan sisa fungsi lain' }
-      ],
-      ans: 'A',
-      exp: 'Ketiadaan kondisi basis menyebabkan rekursi tak terbatas (infinite recursion) yang menghabiskan alokasi memori tumpukan panggilan (call stack overflow).',
-      diff: 'Sulit',
-      lvl: 'C4'
-    },
-    {
-      q: 'Dalam graf (graph), algoritma Breadth-First Search (BFS) digunakan untuk menjelajahi simpul (node). Struktur data pendukung apakah yang lazim digunakan untuk mengimplementasikan BFS?',
-      opts: [
-        { key: 'A', text: 'Queue (Antrean)' },
-        { key: 'B', text: 'Stack (Tumpukan)' },
-        { key: 'C', text: 'Priority Tree tunggal' },
-        { key: 'D', text: 'Array 1 dimensi statis' },
-        { key: 'E', text: 'Hash Table sederhana' }
-      ],
-      ans: 'A',
-      exp: 'BFS menelusuri simpul tetangga level demi level menggunakan Queue untuk memastikan urutan kunjungan FIFO.',
-      diff: 'Sulit',
-      lvl: 'C4'
-    }
-  ];
+  const subjectCategory = detectSubjectCategory(config?.mataPelajaran || '', config?.topikCapaian || '');
+
+  let topicBank = [];
+
+  if (subjectCategory === 'fisika') {
+    topicBank = [
+      {
+        q: 'Perhatikan diagram gaya bebas pada balok bermassa m = 4 kg yang ditarik gaya F = 32 N (θ = 30°) di lantai kasar (μk = 0,2, g = 10 m/s²)! Berapakah percepatan linear (a) balok tersebut?',
+        opts: [
+          { key: 'A', text: '4,25 m/s²' },
+          { key: 'B', text: '5,68 m/s²' },
+          { key: 'C', text: '6,88 m/s²' },
+          { key: 'D', text: '8,00 m/s²' },
+          { key: 'E', text: '9,50 m/s²' }
+        ],
+        ans: 'B',
+        exp: 'N = mg - F.sin(30°) = 40 - 16 = 24 N. fk = 0,2 x 24 = 4,8 N. ΣFx = 32(0,86) - 4,8 = 22,72 N. a = 22,72 / 4 = 5,68 m/s².',
+        diff: 'Sedang',
+        lvl: 'C3',
+        svgType: 'physics_fbd'
+      },
+      {
+        q: 'Rangkaian tertutup memiliki resistor R1 = 4 Ω seri dengan kombinasi paralel R2 = 6 Ω dan R3 = 12 Ω, serta baterai E = 18 V (r = 1 Ω). Berapakah kuat arus total I dan tegangan V_AB?',
+        opts: [
+          { key: 'A', text: 'I = 1,0 A dan V_AB = 4,0 V' },
+          { key: 'B', text: 'I = 1,5 A dan V_AB = 6,0 V' },
+          { key: 'C', text: 'I = 2,0 A dan V_AB = 8,0 V' },
+          { key: 'D', text: 'I = 2,5 A dan V_AB = 10,0 V' },
+          { key: 'E', text: 'I = 3,0 A dan V_AB = 12,0 V' }
+        ],
+        ans: 'C',
+        exp: 'Rp = (6x12)/(6+12) = 4 Ω. Rtot = 4 + 4 + 1 = 9 Ω. I = 18 / 9 = 2,0 A. V_AB = 2,0 x 4 = 8,0 Volt.',
+        diff: 'Sedang',
+        lvl: 'C3',
+        svgType: 'physics_circuit'
+      },
+      {
+        q: 'Berdasarkan grafik v-t gerak lurus dari t = 0 s hingga t = 14 s (trapesium dengan v maksimum = 20 m/s), hitunglah jarak total yang ditempuh benda!',
+        opts: [
+          { key: 'A', text: '120 meter' },
+          { key: 'B', text: '160 meter' },
+          { key: 'C', text: '180 meter' },
+          { key: 'D', text: '200 meter' },
+          { key: 'E', text: '240 meter' }
+        ],
+        ans: 'D',
+        exp: 'Jarak = Luas Trapesium = ½ x (14 + 6) x 20 = 200 meter.',
+        diff: 'Sedang',
+        lvl: 'C3',
+        svgType: 'physics_motion_graph'
+      },
+      {
+        q: 'Sebuah benda bermassa m = 2 kg jatuh bebas dari ketinggian h1 = 20 m. Berapakah energi kinetik benda saat berada pada ketinggian h2 = 5 m? (g = 10 m/s²)',
+        opts: [
+          { key: 'A', text: '300 Joule' },
+          { key: 'B', text: '250 Joule' },
+          { key: 'C', text: '200 Joule' },
+          { key: 'D', text: '150 Joule' },
+          { key: 'E', text: '100 Joule' }
+        ],
+        ans: 'A',
+        exp: 'Ek = m.g.(h1 - h2) = 2 x 10 x (20 - 5) = 300 Joule.',
+        diff: 'Mudah',
+        lvl: 'C2'
+      }
+    ];
+  } else if (subjectCategory === 'matematika') {
+    topicBank = [
+      {
+        q: 'Pada segitiga siku-siku ABC di B dengan panjang alas AB = 12 cm dan tinggi BC = 5 cm, tentukan panjang sisi miring AC dan nilai sin α + cos α!',
+        opts: [
+          { key: 'A', text: 'AC = 13 cm dan 17/13' },
+          { key: 'B', text: 'AC = 13 cm dan 12/13' },
+          { key: 'C', text: 'AC = 15 cm dan 17/15' },
+          { key: 'D', text: 'AC = 13 cm dan 7/13' },
+          { key: 'E', text: 'AC = 17 cm dan 15/17' }
+        ],
+        ans: 'A',
+        exp: 'AC = √(12² + 5²) = 13 cm. sin α = 5/13, cos α = 12/13. sin + cos = 17/13.',
+        diff: 'Mudah',
+        lvl: 'C3',
+        svgType: 'math_geometry_triangle'
+      },
+      {
+        q: 'Tentukan koordinat titik puncak dan titik potong sumbu-X dari grafik kurva parabola fungsi kuadrat f(x) = x² - 6x + 5!',
+        opts: [
+          { key: 'A', text: 'Puncak (2, -3) dan titik potong (2, 0) dan (3, 0)' },
+          { key: 'B', text: 'Puncak (3, -9) dan titik potong (-1, 0) dan (5, 0)' },
+          { key: 'C', text: 'Puncak (3, -4) dan titik potong (1, 0) dan (5, 0)' },
+          { key: 'D', text: 'Puncak (-3, 4) dan titik potong (-1, 0) dan (-5, 0)' },
+          { key: 'E', text: 'Puncak (3, 4) dan titik potong (1, 0) dan (5, 0)' }
+        ],
+        ans: 'C',
+        exp: 'xp = -(-6)/2 = 3. yp = 3² - 6(3) + 5 = -4 => Puncak (3, -4). Pembuat nol: (x-1)(x-5)=0 => x=1, x=5.',
+        diff: 'Sedang',
+        lvl: 'C3',
+        svgType: 'math_function_graph'
+      },
+      {
+        q: 'Diberikan SPLDV: 3x + 2y = 28 dan 2x + 5y = 37. Berapakah nilai dari penyelesaian (4x - y)?',
+        opts: [
+          { key: 'A', text: '14' },
+          { key: 'B', text: '19' },
+          { key: 'C', text: '24' },
+          { key: 'D', text: '28' },
+          { key: 'E', text: '32' }
+        ],
+        ans: 'B',
+        exp: 'Eliminasi menghasilkan x = 6 dan y = 5. Nilai 4x - y = 4(6) - 5 = 19.',
+        diff: 'Sedang',
+        lvl: 'C3'
+      },
+      {
+        q: 'Sebuah lingkaran berpusat di O memiliki jari-jari r = 14 cm dan sudut juring AOB = 90°. Hitunglah luas juring AOB dan panjang busur AB! (π = 22/7)',
+        opts: [
+          { key: 'A', text: 'Luas = 77 cm² dan Busur = 11 cm' },
+          { key: 'B', text: 'Luas = 110 cm² dan Busur = 18 cm' },
+          { key: 'C', text: 'Luas = 154 cm² dan Busur = 22 cm' },
+          { key: 'D', text: 'Luas = 308 cm² dan Busur = 44 cm' },
+          { key: 'E', text: 'Luas = 616 cm² dan Busur = 88 cm' }
+        ],
+        ans: 'C',
+        exp: 'Luas = ¼ x (22/7) x 14² = 154 cm². Panjang busur = ¼ x 2 x (22/7) x 14 = 22 cm.',
+        diff: 'Sedang',
+        lvl: 'C3'
+      }
+    ];
+  } else if (subjectCategory === 'kimia') {
+    topicBank = [
+      {
+        q: 'Sebanyak 25 mL larutan HCl dititrasi dengan larutan standar NaOH 0,10 M. Titik akhir titrasi tercapai saat volume NaOH terpakai adalah 30 mL. Berapakah molaritas HCl?',
+        opts: [
+          { key: 'A', text: '0,06 M' },
+          { key: 'B', text: '0,08 M' },
+          { key: 'C', text: '0,12 M' },
+          { key: 'D', text: '0,15 M' },
+          { key: 'E', text: '0,20 M' }
+        ],
+        ans: 'C',
+        exp: 'Va.Ma.na = Vb.Mb.nb => 25 x Ma x 1 = 30 x 0,10 x 1 => Ma = 3,0 / 25 = 0,12 M.',
+        diff: 'Sedang',
+        lvl: 'C3',
+        svgType: 'chemistry_titration'
+      },
+      {
+        q: 'Diketahui reaksi pembakaran metana: CH₄(g) + 2O₂(g) -> CO₂(g) + 2H₂O(l) ΔH = -890 kJ/mol. Berapakah kalor yang dilepaskan pada pembakaran sempurna 32 gram CH₄ (Mr = 16)?',
+        opts: [
+          { key: 'A', text: '890 kJ dilepaskan' },
+          { key: 'B', text: '1.780 kJ dilepaskan' },
+          { key: 'C', text: '2.670 kJ dilepaskan' },
+          { key: 'D', text: '3.560 kJ diserap' },
+          { key: 'E', text: '1.780 kJ diserap' }
+        ],
+        ans: 'B',
+        exp: 'mol = 32 / 16 = 2,0 mol. Q = 2,0 x 890 = 1.780 kJ dilepaskan.',
+        diff: 'Sedang',
+        lvl: 'C3',
+        svgType: 'chemistry_energy_diagram'
+      },
+      {
+        q: 'Sebanyak 5,4 gram serbuk aluminium (Al, Ar = 27) direaksikan dengan asam sulfat: 2Al + 3H₂SO₄ -> Al₂(SO₄)₃ + 3H₂. Berapakah volume gas H₂ yang dihasilkan pada kondisi STP?',
+        opts: [
+          { key: 'A', text: '6,72 Liter' },
+          { key: 'B', text: '4,48 Liter' },
+          { key: 'C', text: '8,96 Liter' },
+          { key: 'D', text: '2,24 Liter' },
+          { key: 'E', text: '11,20 Liter' }
+        ],
+        ans: 'A',
+        exp: 'mol Al = 5,4/27 = 0,2 mol. mol H₂ = (3/2) x 0,2 = 0,3 mol. V STP = 0,3 x 22,4 = 6,72 Liter.',
+        diff: 'Sedang',
+        lvl: 'C3'
+      },
+      {
+        q: 'Diketahui E° Zn²⁺/Zn = -0,76 V dan E° Cu²⁺/Cu = +0,34 V. Tentukan notasi sel dan potensial sel standar (E° sel) yang dihasilkan!',
+        opts: [
+          { key: 'A', text: 'Cu | Cu²⁺ || Zn²⁺ | Zn  dengan E° sel = -1,10 V' },
+          { key: 'B', text: 'Zn | Zn²⁺ || Cu²⁺ | Cu  dengan E° sel = +0,42 V' },
+          { key: 'C', text: 'Cu | Cu²⁺ || Zn²⁺ | Zn  dengan E° sel = +1,10 V' },
+          { key: 'D', text: 'Zn | Zn²⁺ || Cu²⁺ | Cu  dengan E° sel = +1,10 V' },
+          { key: 'E', text: 'Zn | Zn²⁺ || Cu²⁺ | Cu  dengan E° sel = +1,52 V' }
+        ],
+        ans: 'D',
+        exp: 'E° sel = E° katoda - E° anoda = +0,34 - (-0,76) = +1,10 Volt. Notasi: Zn | Zn²⁺ || Cu²⁺ | Cu.',
+        diff: 'Sedang',
+        lvl: 'C3'
+      }
+    ];
+  } else {
+    // Default: Informatika & Komputasi
+    topicBank = [
+      {
+        q: 'Manakah dari skenario berikut yang merepresentasikan penerapan teknik Dekomposisi dalam berpikir komputasional?',
+        opts: [
+          { key: 'A', text: 'Memecah program aplikasi kasir menjadi sub-modul inventaris barang, kalkulasi harga, dan cetak struk pembayaran.' },
+          { key: 'B', text: 'Mengabaikan jenis font teks saat merancang skema basis data relasional.' },
+          { key: 'C', text: 'Menghitung waktu eksekusi kode program per milidetik.' },
+          { key: 'D', text: 'Menggandakan seluruh berkas kode program ke server cadangan.' },
+          { key: 'E', text: 'Membuat tata letak antarmuka pengguna tanpa memikirkan fungsi tombol.' }
+        ],
+        ans: 'A',
+        exp: 'Dekomposisi adalah proses memecah permasalahan kompleks menjadi komponen-komponen sub-masalah yang lebih kecil dan terkelola.',
+        diff: 'Mudah',
+        lvl: 'C2'
+      },
+      {
+        q: 'Pada struktur data Tumpukan (Stack), elemen yang pertama kali dimasukkan akan dikeluarkan paling akhir (LIFO). Manakah implementasi fitur berikut yang beroperasi berdasarkan prinsip Stack?',
+        opts: [
+          { key: 'A', text: 'Fitur Undo dan Redo pada aplikasi text editor' },
+          { key: 'B', text: 'Antrean pencetakan dokumen di spooler printer kantor' },
+          { key: 'C', text: 'Pemutaran daftar lagu berurutan pada pemutar musik digital' },
+          { key: 'D', text: 'Sistem panggilan antrean nomor registrasi pasien rumah sakit' },
+          { key: 'E', text: 'Pengiriman pesan email masuk berurutan berdasarkan waktu pengiriman' }
+        ],
+        ans: 'A',
+        exp: 'Fitur Undo/Redo menyimpan riwayat aksi pengguna dalam struktur data Stack (LIFO), di mana aksi terakhir yang dilakukan akan dibatalkan pertama kali.',
+        diff: 'Sedang',
+        lvl: 'C3'
+      },
+      {
+        q: 'Diberikan larik (array) bilangan bulat: [29, 10, 14, 37, 13]. Jika diurutkan secara menaik (ascending) menggunakan Selection Sort pada putaran pertama, elemen terkecil akan ditukar dengan elemen berindeks ke-...',
+        opts: [
+          { key: 'A', text: '0 (elemen pertama)' },
+          { key: 'B', text: '1 (elemen kedua)' },
+          { key: 'C', text: '2 (elemen ketiga)' },
+          { key: 'D', text: '4 (elemen terakhir)' },
+          { key: 'E', text: 'Tidak ada penukaran posisi' }
+        ],
+        ans: 'A',
+        exp: 'Pada Selection Sort putaran pertama, sistem mencari nilai minimum di seluruh larik (angka 10) lalu menukarnya ke posisi paling awal (indeks 0).',
+        diff: 'Sedang',
+        lvl: 'C3'
+      },
+      {
+        q: 'Mengapa algoritma Binary Search memiliki kompleksitas waktu yang jauh lebih efisien O(log n) dibandingkan Linear Search O(n)?',
+        opts: [
+          { key: 'A', text: 'Binary Search membagi dua ruang pencarian secara berulang pada setiap tahap pembandingan.' },
+          { key: 'B', text: 'Binary Search tidak memerlukan memori tambahan saat eksekusi.' },
+          { key: 'C', text: 'Binary Search dapat mencari data tanpa perlu data diurutkan terlebih dahulu.' },
+          { key: 'D', text: 'Binary Search bekerja dengan cara memeriksa elemen dari dua sisi secara bersamaan.' },
+          { key: 'E', text: 'Binary Search hanya dapat memproses tipe data string singkat.' }
+        ],
+        ans: 'A',
+        exp: 'Dengan membagi ruang pencarian menjadi setengah pada setiap langkah, jumlah iterasi berkurang secara logaritmik terhadap ukuran data n.',
+        diff: 'Sulit',
+        lvl: 'C4'
+      }
+    ];
+  }
 
   let addIndex = 0;
   while (pool.length < count) {
     const tmpl = topicBank[addIndex % topicBank.length];
     const itemNo = pool.length + 1;
+    const hasVisual = Boolean(tmpl.svgType);
+    const svgVisual = tmpl.svgType ? generateExactScienceSvg(tmpl.svgType, `Diagram No. ${itemNo}`) : null;
+
     pool.push({
       no: itemNo,
       type: 'pg_ae',
       typeName: 'Pilihan Ganda',
-      materi: config.topikCapaian || 'Berpikir Komputasional',
+      materi: config.topikCapaian || (subjectCategory !== 'umum' ? config.mataPelajaran : 'Berpikir Komputasional'),
       capaianPembelajaran: config.capaianPembelajaran,
-      indikator: `Menganalisis prinsip dan penerapan komputasional pada butir simulasi ke-${itemNo}.`,
+      indikator: `Menghitung dan menganalisis persoalan kuantitatif pada butir simulasi CBT ke-${itemNo}.`,
       levelKognitif: tmpl.lvl,
-      levelLabel: 'Aplikasi Komputasional',
+      levelLabel: 'Aplikasi Numerik',
       difficulty: tmpl.diff,
-      stimulus: `Diberikan stimulus pemecahan masalah informatika dan logika komputasi butir ${itemNo}:`,
+      stimulus: `Diberikan data kuantitatif dan parameter soal nomor ${itemNo}:`,
+      hasVisual,
+      svgVisual,
       questionText: tmpl.q,
       options: tmpl.opts,
       correctKey: tmpl.ans,

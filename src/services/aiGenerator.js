@@ -1,7 +1,18 @@
 // AI Assessment Generator Service
 // Mendukung Google Gemini API (Direct) & Built-in High-Fidelity Pedagogical Engine
+import { 
+  detectSubjectCategory, 
+  generateExactScienceSvg, 
+  generateExactScienceQuestion 
+} from './exactScienceGenerator';
 
 export const generateSvgIllustration = (type, title = 'Ilustrasi Soal') => {
+  // Cek apakah jenis SVG termasuk kategori sains/matematika eksak
+  const exactSvg = generateExactScienceSvg(type, title);
+  if (exactSvg) {
+    return exactSvg;
+  }
+
   switch (type) {
     case 'flowchart':
       return `<svg viewBox="0 0 500 220" xmlns="http://www.w3.org/2000/svg" class="w-full max-w-md mx-auto my-3 rounded-lg border border-slate-200 bg-slate-50 p-2 shadow-sm">
@@ -562,19 +573,65 @@ export const generateQuestionsLocally = (config) => {
     const defaultCorrectKey = optionLetters[idx % optionLetters.length];
     const defaultCorrectKeys = isFaseABCD ? ['A', 'C'] : ['A', 'C', 'E'];
 
-    const localized = generateLocalizedQuestion({
-      item,
-      idx,
-      itemLang,
-      actualMapel,
-      topikCapaian,
-      assignedElement,
-      assignedBloom,
-      isFaseABCD,
-      optionLetters,
-      defaultCorrectKey,
-      defaultCorrectKeys
-    });
+    const subjectCategory = detectSubjectCategory(actualMapel, topikCapaian);
+
+    let localized;
+    let finalSvgVisual = null;
+    let itemHasVisual = hasVisual;
+
+    if (subjectCategory !== 'umum') {
+      // Pembuatan Soal Kuantitatif Matematika, Fisika, dan Kimia (Perhitungan Berbasis Angka & Diagram)
+      localized = generateExactScienceQuestion({
+        subjectCategory,
+        actualMapel,
+        topikCapaian,
+        item,
+        idx,
+        itemLang,
+        assignedElement,
+        assignedBloom,
+        isFaseABCD,
+        optionLetters,
+        defaultCorrectKey
+      });
+
+      // Untuk sains eksak, selalu sertakan diagram visual teknis jika opsi withMedia aktif
+      itemHasVisual = withMedia;
+      if (itemHasVisual && localized.svgType) {
+        finalSvgVisual = generateSvgIllustration(localized.svgType, `Diagram No. ${item.no} - ${actualMapel}`);
+      }
+    } else {
+      // Pembuatan Soal Umum
+      localized = generateLocalizedQuestion({
+        item,
+        idx,
+        itemLang,
+        actualMapel,
+        topikCapaian,
+        assignedElement,
+        assignedBloom,
+        isFaseABCD,
+        optionLetters,
+        defaultCorrectKey,
+        defaultCorrectKeys
+      });
+
+      if (itemHasVisual) {
+        finalSvgVisual = generateSvgIllustration(visualType, `Diagram No. ${item.no} - ${topikCapaian}`);
+      }
+    }
+
+    const capaianText = subjectCategory !== 'umum'
+      ? `Peserta didik mampu menerapkan formulasi matematis, melakukan perhitungan kuantitatif berbasis data angka, menganalisis diagram/grafik fisis, dan memecahkan masalah ${actualMapel} pada materi ${topikCapaian} secara akurat.`
+      : `Peserta didik mampu menganalisis, mengevaluasi, dan merefleksikan konsep ${topikCapaian} secara kritis serta berkarakter luhur.`;
+
+    const indikatorText = subjectCategory !== 'umum'
+      ? `Disajikan stimulus kontekstual dan diagram teknis materi ${topikCapaian}, peserta didik dapat melakukan perhitungan matematis/sains untuk menentukan nilai besaran yang tepat.`
+      : `Disajikan stimulus kontekstual tentang ${topikCapaian}, peserta didik dapat menentukan solusi/analisis yang tepat dengan mencerminkan nilai ${assignedElement}.`;
+
+    const sumberText = subjectCategory !== 'umum'
+      ? `Buku Siswa & Panduan Guru ${actualMapel} ${kelas} Kemendikdasmen, Kumpulan Soal Sains & Kalkulasi Terstandar`
+      : `Buku Guru & Siswa ${actualMapel} ${kelas}, Modul Ajar Resmi, Referensi Kurikulum Terstandar`;
 
     return {
       no: item.no,
@@ -583,20 +640,20 @@ export const generateQuestionsLocally = (config) => {
       language: itemLang,
       languageLabel: itemLang === 'en' ? 'English' : (itemLang === 'ar' ? 'العربية' : (itemLang === 'fr' ? 'Français' : (itemLang === 'palembang' ? 'Baso Pelembang' : 'Indonesia'))),
       stimulus: localized.stimulus,
-      hasVisual,
-      svgVisual: hasVisual ? generateSvgIllustration(visualType, `Diagram No. ${item.no} - ${topikCapaian}`) : null,
+      hasVisual: itemHasVisual,
+      svgVisual: finalSvgVisual,
       questionText: localized.butirSoal,
       options: localized.options,
       correctKey: localized.correctKey,
       correctKeys: item.type.includes('kompleks') ? localized.correctKeys : null,
       materi: topikCapaian,
-      capaianPembelajaran: `Peserta didik mampu menganalisis, mengevaluasi, dan merefleksikan konsep ${topikCapaian} secara kritis serta berkarakter luhur.`,
-      indikator: `Disajikan stimulus kontekstual tentang ${topikCapaian}, peserta didik dapat menentukan solusi/analisis yang tepat dengan mencerminkan nilai ${assignedElement}.`,
+      capaianPembelajaran: capaianText,
+      indikator: indikatorText,
       levelKognitif: assignedBloom,
       levelLabel: bloomLabels[assignedBloom] || assignedBloom,
       difficulty: diffLevel,
       elemenIntegrasi: assignedElement,
-      sumber: `Buku Guru & Siswa ${actualMapel} ${kelas}, Modul Ajar Resmi, Referensi Kurikulum Terstandar`,
+      sumber: sumberText,
       scoringGuide: localized.scoringGuide,
       explanation: localized.explanation
     };
@@ -668,6 +725,29 @@ export const generateQuestionsViaGemini = async (config, apiKey) => {
     languageInstruction = `ATURAN BAHASA SOAL: Seluruh naskah soal disajikan dalam BAHASA INDONESIA baku dan edukatif. Cantumkan field "language": "id" pada setiap butir soal.`;
   }
 
+  const subjectCategory = detectSubjectCategory(actualMapel, topikCapaian);
+  let exactScienceInstruction = '';
+  if (subjectCategory !== 'umum') {
+    exactScienceInstruction = `
+========================================================================
+PERATURAN WAJIB MATA PELAJARAN EKSAK (${actualMapel.toUpperCase()}) - SANGAT KETAT:
+1. DILARANG KERAS MEMBUAT SOAL TEORI HAFALAN, DEFINISI KONSEPTUAL SEMATA, ATAU TEKS NARASI NON-HITUNGAN!
+2. SELURUH SOAL WAJIB BERUPA SOAL PERHITUNGAN MATEMATIS / SAINS DENGAN ANGKA KUANTITATIF NYATA (NUMERICAL PROBLEMS).
+3. SETIAP SOAL WAJIB:
+   - Menyertakan data angka numerik terukur yang jelas (contoh: massa m = 4 kg, gaya F = 32 N, sudut θ = 30°, kecepatan v = 20 m/s, hambatan R = 6 Ω, tegangan E = 18 V, konsentrasi M = 0,10 M, volume V = 25 mL, fungsi f(x) = x² - 6x + 5, panjang sisi geometri cm/m).
+   - Merujuk gambar/diagram di awal stimulus (contoh: "Perhatikan gambar diagram gaya bebas di atas...", "Perhatikan grafik kecepatan terhadap waktu (v-t) berikut...", "Perhatikan diagram rangkaian listrik resistor tertutup berikut...", "Perhatikan gambar set alat titrasi asam-basa berikut...", "Perhatikan gambar bangun segitiga siku-siku di atas...").
+   - Mengharuskan siswa menghitung menggunakan rumus fisika/kimia/matematika terstandar.
+4. OPSI PILIHAN JAWABAN (A, B, C, D, E) WAJIB BERUPA ANGKA HASIL PERHITUNGAN BESERTA SATUAN RESMI (contoh: "A. 5,68 m/s²", "B. 8,00 m/s²", "C. 12 m/s²", "A. 13 cm dan 17/13", atau "A. 0,12 M"). DILARANG MEMBUAT OPSI BERUPA KALIMAT NARASI PANJANG!
+5. FIELD "explanation" WAJIB MENJELASKAN TAHAPAN PERHITUNGAN MATEMATIS LENGKAP:
+   - Diketahui: (besaran & nilai angka)
+   - Ditanya: (variabel)
+   - Rumus yang digunakan
+   - Langkah substitusi angka langkah demi langkah hingga hasil akhir
+6. FIELD "hasVisual" WAJIB bernilai true pada setiap butir soal yang merujuk diagram/grafik/set alat.
+========================================================================
+`;
+  }
+
   const prompt = `Anda adalah Asisten Pakar Evaluasi Pendidikan dan Asesmen Kurikulum Nasional Kemendikdasmen.
 Tugas Anda: Buat paket soal ujian terstruktur lengkap beserta Kisi-Kisi dan Kartu Soal.
 
@@ -686,6 +766,7 @@ Data Profil:
 - Dimensi Kognitif Bloom: C1-C6 terdistribusi proporsional
 - Sertakan Ilustrasi/Visual: ${withMedia ? 'YA (berikan deskripsi visual dan prompt gambar/diagram)' : 'TIDAK'}
 - ${languageInstruction}
+${exactScienceInstruction}
 - Instruksi Khusus Pengguna: ${customInstruction || 'Tidak ada'}
 
 Hasilkan respon HANYA dalam format JSON valid tanpa tanda markdown tambahan di luar blok JSON. Struktur JSON:
@@ -714,7 +795,7 @@ Hasilkan respon HANYA dalam format JSON valid tanpa tanda markdown tambahan di l
       "elemenIntegrasi": "Elemen karakter yang dihubungkan",
       "sumber": "Referensi acuan materi",
       "scoringGuide": "Pedoman penskoran detail",
-      "explanation": "Pembahasan ilmiah dan alasan jawaban benar"
+      "explanation": "Pembahasan ilmiah dan langkah perhitungan matematis bertahap"
     }
   ]
 }`;
@@ -764,8 +845,21 @@ Hasilkan respon HANYA dalam format JSON valid tanpa tanda markdown tambahan di l
     };
 
     const questionsWithSvgs = parsed.questions.map((q, idx) => {
-      const hasVisual = q.hasVisual || (withMedia && idx % 2 === 0);
-      const visualType = idx % 3 === 0 ? 'flowchart' : (idx % 3 === 1 ? 'chart' : 'ecosystem');
+      const hasVisual = q.hasVisual || (withMedia && (subjectCategory !== 'umum' || idx % 2 === 0));
+      let visualType = 'flowchart';
+      if (subjectCategory === 'fisika') {
+        const types = ['physics_fbd', 'physics_circuit', 'physics_motion_graph'];
+        visualType = types[idx % types.length];
+      } else if (subjectCategory === 'matematika') {
+        const types = ['math_geometry_triangle', 'math_function_graph'];
+        visualType = types[idx % types.length];
+      } else if (subjectCategory === 'kimia') {
+        const types = ['chemistry_titration', 'chemistry_energy_diagram'];
+        visualType = types[idx % types.length];
+      } else {
+        visualType = idx % 3 === 0 ? 'flowchart' : (idx % 3 === 1 ? 'chart' : 'ecosystem');
+      }
+
       const resolvedLang = q.language || (
         languageConfig.mode === 'bilingual'
           ? (idx < bilingualCountId ? 'id' : 'en')
@@ -776,7 +870,7 @@ Hasilkan respon HANYA dalam format JSON valid tanpa tanda markdown tambahan di l
         language: resolvedLang,
         languageLabel: languageLabels[resolvedLang] || 'Indonesia',
         hasVisual,
-        svgVisual: hasVisual ? generateSvgIllustration(visualType, `Ilustrasi No. ${q.no} - ${topikCapaian}`) : null
+        svgVisual: hasVisual ? generateSvgIllustration(visualType, `Diagram No. ${q.no} - ${actualMapel}`) : null
       };
     });
 

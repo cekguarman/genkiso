@@ -271,6 +271,22 @@ export default function ModalPetunjukPenggunaan({ onClose, onOpenApiKey }) {
                       <li><strong>Checkbox Media Ilustrasi:</strong> Centang opsi ini jika Anda ingin soal dilengkapi diagram dan ilustrasi visual terpadu.</li>
                     </ul>
                   </div>
+
+                  <div className="bg-purple-50/60 dark:bg-slate-800/60 p-4 rounded-2xl border border-purple-100 dark:border-slate-700">
+                    <h4 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm mb-2 flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] font-black">Khusus Eksak</span>
+                      <span>D. Soal Kuantitatif Berangka & Diagram (Matematika, Fisika, Kimia)</span>
+                    </h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mb-2">
+                      Ketika Anda memilih mata pelajaran <strong>Matematika</strong>, <strong>Fisika</strong>, atau <strong>Kimia</strong>, sistem secara otomatis mengaktifkan mesin perhitungan kuantitatif:
+                    </p>
+                    <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-5 list-disc">
+                      <li><strong>Bukan Soal Teori / Hafalan:</strong> Soal menyajikan skenario berbasis angka, parameter fisik, data percobaan, dan perhitungan nyata.</li>
+                      <li><strong>Diagram Teknis Vektor (SVG):</strong> Dilengkapi diagram yang dirujuk langsung pada stimulus soal, seperti <em>Free Body Diagram (FBD)</em> gaya gesek/bidang miring, rangkaian resistor seri-paralel, kurva grafik kecepatan-waktu (\(v-t\)), geometri segitiga siku-siku & trigonometri, parabola fungsi kuadrat, instalasi titrasi buret-erlenmeyer, hingga diagram tingkat energi entalpi (\(\Delta H\)).</li>
+                      <li><strong>Pembahasan Sistematis:</strong> Setiap butir soal dilengkapi tahapan lengkap: <em>Diketahui, Ditanya, Rumus, Perhitungan Angka Rinci, dan Kesimpulan Satuan</em>.</li>
+                      <li><strong>Rapi pada Dokumen Word (.doc):</strong> Diagram teknis SVG disematkan langsung ke naskah soal dan kartu soal saat diunduh.</li>
+                    </ul>
+                  </div>
                 </div>
               </div>
             )}

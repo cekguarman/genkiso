@@ -216,6 +216,7 @@ export const exportNaskahSoalToWord = (examConfig, questions) => {
         <td>
           ${q.language && q.language !== 'id' ? `<div style="font-size: 8.5pt; font-weight: bold; color: #6b21a8; background-color: #f3e8ff; padding: 1.5pt 5pt; border-radius: 3px; display: inline-block; margin-bottom: 3pt;">[${q.language === 'en' ? 'English' : (q.language === 'ar' ? 'العربية' : (q.language === 'fr' ? 'Français' : (q.language === 'palembang' ? 'Baso Pelembang' : q.language)))}]</div>` : ''}
           ${q.stimulus ? `<div class="stimulus-box">${q.stimulus}</div>` : ''}
+          ${q.hasVisual && q.svgVisual ? `<div style="text-align: center; margin: 8pt 0;">${q.svgVisual}</div>` : ''}
           <div style="font-weight: 600; margin-bottom: 5pt; line-height: 1.3;">
             ${q.questionText}
           </div>
@@ -476,6 +477,7 @@ export const exportKartuSoalToWord = (examConfig, questions) => {
           RUMUSAN BUTIR SOAL NOMOR: ${q.no}
         </div>
         ${q.stimulus ? `<div class="stimulus-box">${q.stimulus}</div>` : ''}
+        ${q.hasVisual && q.svgVisual ? `<div style="text-align: center; margin: 6pt 0;">${q.svgVisual}</div>` : ''}
         <div style="font-weight: 600; margin-bottom: 6pt;">
           ${q.questionText}
         </div>

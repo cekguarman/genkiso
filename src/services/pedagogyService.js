@@ -68,12 +68,54 @@ Format JSON:
   // Built-in High-Fidelity Pedagogical Heuristic Engine (100% Offline & Instan)
   const isKodingAI = actualMapel.toLowerCase().includes('koding') || actualMapel.toLowerCase().includes('kecerdasan') || actualMapel.toLowerCase().includes('ai');
   const isInformatika = actualMapel.toLowerCase().includes('informatika');
+  const isMatematika = actualMapel.toLowerCase().includes('matematika') || actualMapel.toLowerCase().includes('aljabar') || actualMapel.toLowerCase().includes('kalkulus');
+  const isFisika = actualMapel.toLowerCase().includes('fisika');
+  const isKimia = actualMapel.toLowerCase().includes('kimia');
 
   let cp = '';
   let tp = [];
   let atp = [];
 
-  if (isKodingAI) {
+  if (isMatematika) {
+    cp = `Pada akhir Fase ${fase} (${kelas}), peserta didik mampu memodelkan persoalan secara matematis, melakukan operasi aljabar, geometri, dan trigonometri berbasis perhitungan angka terukur pada materi "${cleanTopik}", menganalisis grafik kurva Kartesius, serta menyelesaikan masalah kuantitatif kontekstual dengan penalaran logis dan pembuktian matematis yang akurat.`;
+    tp = [
+      `Mengidentifikasi data numerik, variabel, dan parameter rumus matematis pada topik "${cleanTopik}".`,
+      `Menerapkan algoritma perhitungan eksak, manipulasi aljabar, dan teorema geometri untuk menyelesaikan soal hitungan pada "${cleanTopik}".`,
+      `Menganalisis representasi grafik koordinat Kartesius serta diagram geometris untuk memvalidasi hasil kalkulasi numerik.`
+    ];
+    atp = [
+      `Tahap 1 (Konseptualisasi & Definisi Variabel): Pemahaman notasi, besaran, dan rumus inti "${cleanTopik}".`,
+      `Tahap 2 (Representasi Geometri & Grafik): Pemodelan diagram segitiga, grafik fungsi, atau tabel data angka.`,
+      `Tahap 3 (Kalkulasi Eksak): Operasi hitung bertahap, eliminasi/substitusi, dan penentuan nilai akhir angka.`,
+      `Tahap 4 (Verifikasi Solusi): Pengujian hasil perhitungan terhadap batasan matematis dan interpretasi kontekstual.`
+    ];
+  } else if (isFisika) {
+    cp = `Pada akhir Fase ${fase} (${kelas}), peserta didik mampu menerapkan hukum-hukum fisika, memetakan diagram gaya bebas dan vektor gerak pada materi "${cleanTopik}", melakukan perhitungan kuantitatif berbasis data angka numerik dan satuan SI, serta mengevaluasi grafik fisis (seperti grafik v-t atau rangkaian listrik) secara ilmiah dan teliti.`;
+    tp = [
+      `Mengidentifikasi besaran fisis terukur, satuan baku internasional (SI), dan diagram vektor pada materi "${cleanTopik}".`,
+      `Memformulasikan hukum fisika (Hukum Newton, Ohm/Kirchhoff, termodinamika, kinematika) ke dalam perhitungan matematis bertahap.`,
+      `Menghitung nilai percepatan, resultan gaya, kuat arus, tegangan, atau energi secara presisi berdasarkan stimulus gambar diagram.`
+    ];
+    atp = [
+      `Tahap 1 (Diagram Sistem & Vektor): Pengamatan sketsa fisis, diagram gaya bebas (FBD), atau skema rangkaian listrik pada "${cleanTopik}".`,
+      `Tahap 2 (Formulasi Matematis): Penurunan persamaan hukum fisika sesuai kondisi sistem benda.`,
+      `Tahap 3 (Kalkulasi Numerik): Substitusi nilai angka besaran terukur ke dalam rumus fisika hingga diperoleh hasil kuantitatif.`,
+      `Tahap 4 (Analisis Grafik & Refleksi): Penarikan kesimpulan berdasarkan kurva gerak atau hukum kekekalan fisis.`
+    ];
+  } else if (isKimia) {
+    cp = `Pada akhir Fase ${fase} (${kelas}), peserta didik mampu menganalisis hubungan kuantitatif zat kimia, melakukan perhitungan stoikiometri mol, titrasi asam-basa, termokimia, atau potensial sel pada materi "${cleanTopik}", menginterpretasikan data eksperimen volumetri dan diagram tingkat energi, serta memecahkan persoalan kimia berbasis data empiris secara teliti.`;
+    tp = [
+      `Menyetarakan persamaan reaksi kimia dan menentukan perbandingan mol serta massa zat pada topik "${cleanTopik}".`,
+      `Melakukan perhitungan volumetri asam-basa, perubahan entalpi (ΔH), atau potensial sel (E° sel) dengan langkah matematis terstruktur.`,
+      `Menganalisis diagram tingkat energi, data alat buret laboratorium, atau sel elektrokimia untuk menyimpulkan hasil reaksi.`
+    ];
+    atp = [
+      `Tahap 1 (Persamaan Reaksi & Data Awal): Identifikasi rumus kimia, kesetaraan reaksi, dan data massa/volume/molaritas pada "${cleanTopik}".`,
+      `Tahap 2 (Konversi Stoikiometri Mol): Perhitungan perbandingan mol pereaksi dan penentuan pereaksi pembatas.`,
+      `Tahap 3 (Kalkulasi Kuantitatif Eksak): Penggunaan rumus volumetri netralisasi, termokimia, atau persamaan potensial sel.`,
+      `Tahap 4 (Evaluasi Data Eksperimen): Analisis titik akhir titrasi, perubahan entalpi reaksi, dan efisiensi hasil kimiawi.`
+    ];
+  } else if (isKodingAI) {
     cp = `Pada akhir Fase ${fase} (${kelas}), peserta didik mampu memahami logika komputasi mendasar, merancang struktur algoritma program, mengeksplorasi cara kerja model kecerdasan artifisial secara kontekstual pada materi "${cleanTopik}", serta menerapkan prinsip etika dan keselamatan digital dalam pemanfaatan teknologi kecerdasan artifisial.`;
     tp = [
       `Memahami konsep fundamental, istilah kunci, dan mekanisme kerja pada topik "${cleanTopik}".`,
@@ -100,7 +142,7 @@ Format JSON:
       `Tahap 4: Diseminasi, Dokumentasi Teknis, dan Evaluasi Kinerja Artefak.`
     ];
   } else {
-    // Mata Pelajaran Umum (Matematika, IPA, IPS, Bahasa, dll.)
+    // Mata Pelajaran Umum (IPA, IPS, Bahasa, dll.)
     cp = `Pada akhir Fase ${fase} (${kelas}), peserta didik mampu menganalisis, menginterpretasikan, dan merefleksikan konsep-konsep esensial pada materi "${cleanTopik}" dalam mata pelajaran ${actualMapel} guna memecahkan masalah kontekstual kehidupan sehari-hari dengan penalaran kritis dan berkarakter luhur.`;
     tp = [
       `Menjelaskan prinsip, kaidah ilmiah, dan konsep inti yang mendasari materi "${cleanTopik}".`,
