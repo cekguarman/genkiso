@@ -67,26 +67,29 @@ Format JSON:
 
   // Built-in High-Fidelity Pedagogical Heuristic Engine (100% Offline & Instan)
   const isKodingAI = actualMapel.toLowerCase().includes('koding') || actualMapel.toLowerCase().includes('kecerdasan') || actualMapel.toLowerCase().includes('ai');
-  const isInformatika = actualMapel.toLowerCase().includes('informatika');
-  const isMatematika = actualMapel.toLowerCase().includes('matematika') || actualMapel.toLowerCase().includes('aljabar') || actualMapel.toLowerCase().includes('kalkulus');
+  const isInformatika = actualMapel.toLowerCase().includes('informatika') || actualMapel.toLowerCase().includes('komputer');
+  const isMatematika = actualMapel.toLowerCase().includes('matematika') || actualMapel.toLowerCase().includes('aljabar') || actualMapel.toLowerCase().includes('kalkulus') || actualMapel.toLowerCase().includes('geometri');
   const isFisika = actualMapel.toLowerCase().includes('fisika');
   const isKimia = actualMapel.toLowerCase().includes('kimia');
+  const isEkonomi = actualMapel.toLowerCase().includes('ekonomi') || actualMapel.toLowerCase().includes('akuntansi');
+  const isBiologi = actualMapel.toLowerCase().includes('biologi') || actualMapel.toLowerCase().includes('genetika');
+  const isGeografi = actualMapel.toLowerCase().includes('geografi');
 
   let cp = '';
   let tp = [];
   let atp = [];
 
   if (isMatematika) {
-    cp = `Pada akhir Fase ${fase} (${kelas}), peserta didik mampu memodelkan persoalan secara matematis, melakukan operasi aljabar, geometri, dan trigonometri berbasis perhitungan angka terukur pada materi "${cleanTopik}", menganalisis grafik kurva Kartesius, serta menyelesaikan masalah kuantitatif kontekstual dengan penalaran logis dan pembuktian matematis yang akurat.`;
+    cp = `Pada akhir Fase ${fase} (${kelas}), peserta didik mampu memodelkan persoalan secara matematis, melakukan operasi hitung, manipulasi aljabar, kalkulasi geometri, dan analisis statistik berbasis data angka terukur pada materi "${cleanTopik}", menganalisis grafik koordinat dan diagram teknis, serta menyelesaikan masalah kuantitatif kontekstual dengan penalaran logis dan pembuktian matematis yang akurat.`;
     tp = [
       `Mengidentifikasi data numerik, variabel, dan parameter rumus matematis pada topik "${cleanTopik}".`,
-      `Menerapkan algoritma perhitungan eksak, manipulasi aljabar, dan teorema geometri untuk menyelesaikan soal hitungan pada "${cleanTopik}".`,
-      `Menganalisis representasi grafik koordinat Kartesius serta diagram geometris untuk memvalidasi hasil kalkulasi numerik.`
+      `Menerapkan formulasi perhitungan matematis, teorema geometri, dan manipulasi aljabar untuk menyelesaikan persoalan hitungan pada "${cleanTopik}".`,
+      `Menganalisis representasi diagram geometris, grafik koordinat Kartesius, atau tabel data angka untuk memvalidasi hasil kalkulasi numerik.`
     ];
     atp = [
       `Tahap 1 (Konseptualisasi & Definisi Variabel): Pemahaman notasi, besaran, dan rumus inti "${cleanTopik}".`,
-      `Tahap 2 (Representasi Geometri & Grafik): Pemodelan diagram segitiga, grafik fungsi, atau tabel data angka.`,
-      `Tahap 3 (Kalkulasi Eksak): Operasi hitung bertahap, eliminasi/substitusi, dan penentuan nilai akhir angka.`,
+      `Tahap 2 (Representasi Geometri & Grafik): Pemodelan diagram, grafik fungsi, atau tabel data angka terukur.`,
+      `Tahap 3 (Kalkulasi Numerik Eksak): Operasi hitung bertahap, eliminasi/substitusi, dan penentuan nilai akhir angka beserta satuannya.`,
       `Tahap 4 (Verifikasi Solusi): Pengujian hasil perhitungan terhadap batasan matematis dan interpretasi kontekstual.`
     ];
   } else if (isFisika) {
@@ -115,31 +118,67 @@ Format JSON:
       `Tahap 3 (Kalkulasi Kuantitatif Eksak): Penggunaan rumus volumetri netralisasi, termokimia, atau persamaan potensial sel.`,
       `Tahap 4 (Evaluasi Data Eksperimen): Analisis titik akhir titrasi, perubahan entalpi reaksi, dan efisiensi hasil kimiawi.`
     ];
-  } else if (isKodingAI) {
-    cp = `Pada akhir Fase ${fase} (${kelas}), peserta didik mampu memahami logika komputasi mendasar, merancang struktur algoritma program, mengeksplorasi cara kerja model kecerdasan artifisial secara kontekstual pada materi "${cleanTopik}", serta menerapkan prinsip etika dan keselamatan digital dalam pemanfaatan teknologi kecerdasan artifisial.`;
+  } else if (isEkonomi) {
+    cp = `Pada akhir Fase ${fase} (${kelas}), peserta didik mampu memodelkan fungsi ekonomi matematis, menghitung titik keseimbangan pasar (Qd = Qs), elastisitas harga, analisis titik impas (Break Even Point), serta pendapatan nasional pada materi "${cleanTopik}" secara akurat dan aplikatif.`;
     tp = [
-      `Memahami konsep fundamental, istilah kunci, dan mekanisme kerja pada topik "${cleanTopik}".`,
-      `Merancang algoritma solutif dan logika pemrograman terstruktur untuk menyelesaikan permasalahan kontekstual terkait "${cleanTopik}".`,
-      `Mengevaluasi output model kecerdasan artifisial dan menganalisis implikasi etis, privasi data, serta dampaknya bagi masyarakat.`
+      `Mengidentifikasi variabel ekonomi kuantitatif (harga, kuantitas, biaya tetap, biaya variabel) pada topik "${cleanTopik}".`,
+      `Menghitung harga keseimbangan pasar, kuantitas ekuilibrium, dan BEP dengan metode aljabar matematis.`,
+      `Menganalisis kurva permintaan-penawaran dan menarik kesimpulan finansial rasional berdasarkan data numerik.`
     ];
     atp = [
-      `Tahap 1 (Konseptualisasi): Eksplorasi fenomena, definisi, dan pondasi berpikir komputasional pada "${cleanTopik}".`,
-      `Tahap 2 (Konstruksi Logika): Perancangan diagram alir (flowchart), pseudocode, dan blok kode pemrograman.`,
-      `Tahap 3 (Implementasi AI): Eksperimentasi integrasi model pembelajaran mesin sederhana dan pengolahan data.`,
-      `Tahap 4 (Refleksi & Etika): Penilaian kritis terhadap akurasi, bias algoritma, dan tanggung jawab etis.`
+      `Tahap 1 (Model Matematis Ekonomi): Penyusunan fungsi permintaan, penawaran, atau struktur biaya pada "${cleanTopik}".`,
+      `Tahap 2 (Kalkulasi Ekuilibrium): Perhitungan aljabar titik potong kurva dan ambang batas impas produksi.`,
+      `Tahap 3 (Interpretasi Manajerial): Evaluasi kelayakan usaha dan elastisitas pasar berdasarkan hasil perhitungan.`
+    ];
+  } else if (isBiologi) {
+    cp = `Pada akhir Fase ${fase} (${kelas}), peserta didik mampu menganalisis pola hereditas pewarisan sifat hukum Mendel, melakukan perhitungan rasio persilangan genotipe-fenotipe dan efisiensi aliran energi trofik 10% pada materi "${cleanTopik}" berbasis data empiris kuantitatif.`;
+    tp = [
+      `Menentukan gamet dan membuat bagan kotak Punnett persilangan monohibrid/dihibrid pada topik "${cleanTopik}".`,
+      `Menghitung peluang perolehan sifat keturunan serta jumlah populasi anakan berdasarkan rasio matematika genetika.`,
+      `Menganalisis transfer energi pada piramida biomassa ekologi dengan kaidah matematis terukur.`
+    ];
+    atp = [
+      `Tahap 1 (Diagram Punnett): Penyusunan kombinasi alel parental dan tabel silang pada "${cleanTopik}".`,
+      `Tahap 2 (Kalkulasi Probabilitas): Penghitungan proporsi fenotipe dan persentase keturunan.`,
+      `Tahap 3 (Analisis Populasi): Perhitungan jumlah anakan riil dalam populasi dan refleksi keanekaragaman hayati.`
+    ];
+  } else if (isGeografi) {
+    cp = `Pada akhir Fase ${fase} (${kelas}), peserta didik mampu membaca dan menganalisis data spasial, melakukan perhitungan skala peta numerik, jarak sebenarnya di lapangan, serta kontur interval (CI) pada materi "${cleanTopik}" secara tepat.`;
+    tp = [
+      `Menerapkan rumus skala peta untuk menghitung jarak sebenarnya dan perbesaran peta pada materi "${cleanTopik}".`,
+      `Menghitung ketinggian titik dan kontur interval pada peta topografi dengan formulasi baku.`,
+      `Menganalisis interaksi keruangan antarwilayah dengan model kuantitatif gravitasi geografi.`
+    ];
+    atp = [
+      `Tahap 1 (Parameter Peta): Identifikasi jarak pada peta, penyebut skala, dan garis kontur pada "${cleanTopik}".`,
+      `Tahap 2 (Kalkulasi Numerik Spasial): Operasi hitung konversi satuan panjang dan rumus kontur interval.`,
+      `Tahap 3 (Interpretasi Wilayah): Penyimpulan profil morfologi muka bumi dan konektivitas wilayah.`
+    ];
+  } else if (isKodingAI) {
+    cp = `Pada akhir Fase ${fase} (${kelas}), peserta didik mampu memahami logika komputasi mendasar, merancang struktur algoritma program, melakukan konversi sistem bilangan dan kalkulasi kompleksitas waktu pada materi "${cleanTopik}", serta mengevaluasi performa model kecerdasan artifisial dengan metrik akurasi terukur.`;
+    tp = [
+      `Melakukan konversi sistem bilangan biner, desimal, dan heksadesimal serta evaluasi aljabar boolean pada topik "${cleanTopik}".`,
+      `Menghitung frekuensi eksekusi perulangan algoritma dan menganalisis kompleksitas waktu Big-O.`,
+      `Mengevaluasi confusion matrix untuk menghitung akurasi dan presisi model kecerdasan artifisial secara kuantitatif.`
+    ];
+    atp = [
+      `Tahap 1 (Konseptualisasi & Bilangan Digital): Eksplorasi representasi data biner dan aljabar boolean pada "${cleanTopik}".`,
+      `Tahap 2 (Konstruksi Logika & Kompleksitas): Perancangan perulangan dan kalkulasi jumlah iterasi algoritma.`,
+      `Tahap 3 (Metrik AI): Eksperimentasi pengujian data uji dan perhitungan performa akurasi model.`,
+      `Tahap 4 (Refleksi Solutif): Evaluasi efisiensi algoritma dan integritas etis sistem komputasi.`
     ];
   } else if (isInformatika) {
-    cp = `Pada akhir Fase ${fase} (${kelas}), peserta didik mampu menerapkan cara berpikir komputasional secara terstruktur, mengoperasikan perangkat teknologi digital secara optimal pada materi "${cleanTopik}", dan menghasilkan artefak komputasional yang bermanfaat dengan memperhatikan etika kewargaan digital.`;
+    cp = `Pada akhir Fase ${fase} (${kelas}), peserta didik mampu menerapkan cara berpikir komputasional, melakukan perhitungan subnetting jaringan IPv4, konversi data digital, dan analisis efisiensi algoritma pada materi "${cleanTopik}" secara optimal dan beretika.`;
     tp = [
-      `Mengidentifikasi dan menjelaskan struktur konsep utama pada materi "${cleanTopik}" secara kritis.`,
-      `Menganalisis data dan pola persoalan dengan pendekatan dekomposisi serta abstraksi komputasional.`,
-      `Menghasilkan solusi teknologi terpadu yang adaptif terhadap perkembangan era masyarakat 5.0.`
+      `Menghitung subnet mask, network ID, broadcast, dan host valid pada konfigurasi jaringan materi "${cleanTopik}".`,
+      `Melakukan analisis efisiensi algoritma pencarian dan pengurutan dengan penalaran komputasional kuantitatif.`,
+      `Menghasilkan artefak teknologi terpadu yang teruji secara fungsional dan logis.`
     ];
     atp = [
-      `Tahap 1: Pengenalan Lingkup & Fenomena Masalah pada materi "${cleanTopik}".`,
-      `Tahap 2: Analisis Sistemik, Pengumpulan Data, dan Pemetaan Pola Informasi.`,
-      `Tahap 3: Pembuatan Model Pemecahan Masalah dan Pengujian Solusi Digital.`,
-      `Tahap 4: Diseminasi, Dokumentasi Teknis, dan Evaluasi Kinerja Artefak.`
+      `Tahap 1: Pengenalan Arsitektur Data & Pengalamatan Jaringan pada materi "${cleanTopik}".`,
+      `Tahap 2: Kalkulasi Alokasi Subnetting dan Evaluasi Gerbang Logika Digital.`,
+      `Tahap 3: Pembuatan Model Pemecahan Masalah dan Pengujian Kinerja Komputasi.`,
+      `Tahap 4: Diseminasi, Dokumentasi Teknis, dan Evaluasi Efisiensi Sistem.`
     ];
   } else {
     // Mata Pelajaran Umum (IPA, IPS, Bahasa, dll.)

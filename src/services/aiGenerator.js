@@ -1,7 +1,8 @@
 // AI Assessment Generator Service
 // Mendukung Google Gemini API (Direct) & Built-in High-Fidelity Pedagogical Engine
 import { 
-  detectSubjectCategory, 
+  detectSubjectCategory,
+  isQuantitativeSubject,
   generateExactScienceSvg, 
   generateExactScienceQuestion 
 } from './exactScienceGenerator';
@@ -574,19 +575,22 @@ export const generateQuestionsLocally = (config) => {
     const defaultCorrectKeys = isFaseABCD ? ['A', 'C'] : ['A', 'C', 'E'];
 
     const subjectCategory = detectSubjectCategory(actualMapel, topikCapaian);
+    const isQuant = isQuantitativeSubject(subjectCategory);
 
     let localized;
     let finalSvgVisual = null;
     let itemHasVisual = hasVisual;
 
-    if (subjectCategory !== 'umum') {
-      // Pembuatan Soal Kuantitatif Matematika, Fisika, dan Kimia (Perhitungan Berbasis Angka & Diagram)
+    if (isQuant) {
+      // Pembuatan Soal Kuantitatif Alami (Matematika, Fisika, Kimia, Informatika, Ekonomi, Biologi, Geografi)
       localized = generateExactScienceQuestion({
         subjectCategory,
         actualMapel,
         topikCapaian,
         item,
         idx,
+        fase,
+        kelas,
         itemLang,
         assignedElement,
         assignedBloom,
@@ -595,7 +599,7 @@ export const generateQuestionsLocally = (config) => {
         defaultCorrectKey
       });
 
-      // Untuk sains eksak, selalu sertakan diagram visual teknis jika opsi withMedia aktif
+      // Untuk subjek kuantitatif/eksak, sertakan diagram visual jika opsi withMedia aktif
       itemHasVisual = withMedia;
       if (itemHasVisual && localized.svgType) {
         finalSvgVisual = generateSvgIllustration(localized.svgType, `Diagram No. ${item.no} - ${actualMapel}`);
@@ -621,15 +625,15 @@ export const generateQuestionsLocally = (config) => {
       }
     }
 
-    const capaianText = subjectCategory !== 'umum'
-      ? `Peserta didik mampu menerapkan formulasi matematis, melakukan perhitungan kuantitatif berbasis data angka, menganalisis diagram/grafik fisis, dan memecahkan masalah ${actualMapel} pada materi ${topikCapaian} secara akurat.`
+    const capaianText = isQuant
+      ? `Peserta didik mampu menerapkan formulasi terstandar, melakukan perhitungan numerik berbasis data terukur, menganalisis diagram/grafik fisis, dan memecahkan masalah kontekstual ${actualMapel} ${kelas} pada materi ${topikCapaian} secara akurat.`
       : `Peserta didik mampu menganalisis, mengevaluasi, dan merefleksikan konsep ${topikCapaian} secara kritis serta berkarakter luhur.`;
 
-    const indikatorText = subjectCategory !== 'umum'
-      ? `Disajikan stimulus kontekstual dan diagram teknis materi ${topikCapaian}, peserta didik dapat melakukan perhitungan matematis/sains untuk menentukan nilai besaran yang tepat.`
+    const indikatorText = isQuant
+      ? `Disajikan stimulus kontekstual dan data numerik materi ${topikCapaian}, peserta didik dapat mengaplikasikan rumus untuk menghitung besaran yang tepat.`
       : `Disajikan stimulus kontekstual tentang ${topikCapaian}, peserta didik dapat menentukan solusi/analisis yang tepat dengan mencerminkan nilai ${assignedElement}.`;
 
-    const sumberText = subjectCategory !== 'umum'
+    const sumberText = isQuant
       ? `Buku Siswa & Panduan Guru ${actualMapel} ${kelas} Kemendikdasmen, Kumpulan Soal Sains & Kalkulasi Terstandar`
       : `Buku Guru & Siswa ${actualMapel} ${kelas}, Modul Ajar Resmi, Referensi Kurikulum Terstandar`;
 
@@ -726,24 +730,31 @@ export const generateQuestionsViaGemini = async (config, apiKey) => {
   }
 
   const subjectCategory = detectSubjectCategory(actualMapel, topikCapaian);
+  const isQuant = isQuantitativeSubject(subjectCategory);
   let exactScienceInstruction = '';
-  if (subjectCategory !== 'umum') {
+  if (isQuant) {
     exactScienceInstruction = `
 ========================================================================
-PERATURAN WAJIB MATA PELAJARAN EKSAK (${actualMapel.toUpperCase()}) - SANGAT KETAT:
-1. DILARANG KERAS MEMBUAT SOAL TEORI HAFALAN, DEFINISI KONSEPTUAL SEMATA, ATAU TEKS NARASI NON-HITUNGAN!
-2. SELURUH SOAL WAJIB BERUPA SOAL PERHITUNGAN MATEMATIS / SAINS DENGAN ANGKA KUANTITATIF NYATA (NUMERICAL PROBLEMS).
-3. SETIAP SOAL WAJIB:
-   - Menyertakan data angka numerik terukur yang jelas (contoh: massa m = 4 kg, gaya F = 32 N, sudut θ = 30°, kecepatan v = 20 m/s, hambatan R = 6 Ω, tegangan E = 18 V, konsentrasi M = 0,10 M, volume V = 25 mL, fungsi f(x) = x² - 6x + 5, panjang sisi geometri cm/m).
-   - Merujuk gambar/diagram di awal stimulus (contoh: "Perhatikan gambar diagram gaya bebas di atas...", "Perhatikan grafik kecepatan terhadap waktu (v-t) berikut...", "Perhatikan diagram rangkaian listrik resistor tertutup berikut...", "Perhatikan gambar set alat titrasi asam-basa berikut...", "Perhatikan gambar bangun segitiga siku-siku di atas...").
-   - Mengharuskan siswa menghitung menggunakan rumus fisika/kimia/matematika terstandar.
-4. OPSI PILIHAN JAWABAN (A, B, C, D, E) WAJIB BERUPA ANGKA HASIL PERHITUNGAN BESERTA SATUAN RESMI (contoh: "A. 5,68 m/s²", "B. 8,00 m/s²", "C. 12 m/s²", "A. 13 cm dan 17/13", atau "A. 0,12 M"). DILARANG MEMBUAT OPSI BERUPA KALIMAT NARASI PANJANG!
-5. FIELD "explanation" WAJIB MENJELASKAN TAHAPAN PERHITUNGAN MATEMATIS LENGKAP:
+PERATURAN WAJIB MATA PELAJARAN KUANTITATIF & EKSAK (${actualMapel.toUpperCase()} - FASE ${fase} / ${kelas}):
+1. DILARANG KERAS MEMBUAT SOAL TEORI HAFALAN, DEFINISI KATA-KATA, ATAU TEKS NARASI NON-HITUNGAN!
+2. SELURUH SOAL WAJIB BERUPA SOAL PERHITUNGAN MATEMATIS / SAINS DENGAN ANGKA KUANTITATIF NYATA (NUMERICAL PROBLEMS) SEBAGAIMANA ASESMEN UJIAN RESMI / TKA / SNBT / UTBK / CAMBRIDGE YANG SESUNGGUHNYA.
+3. FORMULASI RUMUS & TINGKAT KESULITAN WAJIB SESUAI DENGAN FASE ${fase} DAN ${kelas}:
+   - Jika Matematika SD (Fase A/B/C): Perhitungan bilangan cacah, pecahan, desimal, bangun datar keliling/luas, skala perbandingan, volume kubus/balok, rata-rata dengan angka cerita kontekstual.
+   - Jika Matematika SMP (Fase D): Aljabar persamaan linear, SPLDV, teorema Pythagoras segitiga, luas juring & busur lingkaran, bangun ruang sisi lengkung (tabung/kerucut), gradien garis lurus, statistika, peluang dengan rumus dan angka nyata.
+   - Jika Matematika SMA (Fase E/F): Trigonometri segitiga & sudut elevasi/aturan sinus, kurva grafik fungsi kuadrat parabola f(x), barisan & deret aritmetika/geometri, persamaan eksponen & logaritma, turunan fungsi kalkulus aljabar ekstrem, matriks determinan/invers dengan angka dan kalkulasi presisi.
+   - Jika Fisika: Rumus resmi fisika (Hukum Newton gaya gesek FBD, rangkaian listrik seri-paralel Ohm/Kirchhoff, grafik kinematika v-t trapesium, usaha energi mekanik, tekanan fluida hidrostatis) dengan besaran, satuan SI, dan angka nyata.
+   - Jika Kimia: Rumus stoikiometri mol, gas STP, titrasi asam-basa netralisasi volumetri, termokimia entalpi ΔH, potensial sel Volta standar dengan data angka nyata dan satuan resmi.
+   - Jika Informatika/Koding: Konversi biner/heksadesimal, subnetting IPv4 CIDR /26 host valid, tabel gerbang logika boolean, iterasi perulangan Big-O O(n²), confusion matrix metrik AI.
+   - Jika Ekonomi: Keseimbangan pasar Qd=Qs (harga P dan kuantitas Q), Break Even Point (BEP unit & rupiah), koefisien elastisitas Ed.
+   - Jika Biologi/IPA/Geografi: Persilangan dihibrid Mendel rasio 9:3:3:1 dan populasi nyata, piramida aliran energi trofik 10%, skala peta dan kontur interval CI.
+4. OPSI PILIHAN JAWABAN (A, B, C, D, E) WAJIB BERUPA ANGKA HASIL PERHITUNGAN BESERTA SATUAN RESMI ATAU NILAI PERSAMAAN. DILARANG MEMBUAT OPSI BERUPA KALIMAT NARASI PANJANG!
+5. FIELD "explanation" WAJIB MENYAJIKAN TAHAPAN PERHITUNGAN MATEMATIS LENGKAP & RUNUT:
    - Diketahui: (besaran & nilai angka)
    - Ditanya: (variabel)
    - Rumus yang digunakan
-   - Langkah substitusi angka langkah demi langkah hingga hasil akhir
-6. FIELD "hasVisual" WAJIB bernilai true pada setiap butir soal yang merujuk diagram/grafik/set alat.
+   - Langkah substitusi angka langkah demi langkah
+   - Hasil akhir dan satuan
+6. FIELD "hasVisual" WAJIB bernilai true pada setiap butir soal yang merujuk diagram/grafik/bangun geometri.
 ========================================================================
 `;
   }
@@ -845,17 +856,28 @@ Hasilkan respon HANYA dalam format JSON valid tanpa tanda markdown tambahan di l
     };
 
     const questionsWithSvgs = parsed.questions.map((q, idx) => {
-      const hasVisual = q.hasVisual || (withMedia && (subjectCategory !== 'umum' || idx % 2 === 0));
+      const hasVisual = q.hasVisual || (withMedia && (isQuant || idx % 2 === 0));
       let visualType = 'flowchart';
       if (subjectCategory === 'fisika') {
         const types = ['physics_fbd', 'physics_circuit', 'physics_motion_graph'];
         visualType = types[idx % types.length];
       } else if (subjectCategory === 'matematika') {
-        const types = ['math_geometry_triangle', 'math_function_graph'];
+        const isSD = ['A', 'B', 'C'].includes(fase) || kelas.toLowerCase().includes('sd');
+        const types = isSD
+          ? ['math_geometry_triangle', 'math_geometry_circle', 'math_sd_rectangle']
+          : ['math_geometry_triangle', 'math_function_graph', 'math_geometry_circle'];
         visualType = types[idx % types.length];
       } else if (subjectCategory === 'kimia') {
         const types = ['chemistry_titration', 'chemistry_energy_diagram'];
         visualType = types[idx % types.length];
+      } else if (subjectCategory === 'informatika') {
+        visualType = 'cs_subnet_binary';
+      } else if (subjectCategory === 'ekonomi') {
+        visualType = 'econ_market_curve';
+      } else if (subjectCategory === 'biologi') {
+        visualType = 'bio_mendel_punnett';
+      } else if (subjectCategory === 'geografi') {
+        visualType = 'geo_contour_map';
       } else {
         visualType = idx % 3 === 0 ? 'flowchart' : (idx % 3 === 1 ? 'chart' : 'ecosystem');
       }

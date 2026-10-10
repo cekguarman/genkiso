@@ -274,17 +274,28 @@ export default function ModalPetunjukPenggunaan({ onClose, onOpenApiKey }) {
 
                   <div className="bg-purple-50/60 dark:bg-slate-800/60 p-4 rounded-2xl border border-purple-100 dark:border-slate-700">
                     <h4 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm mb-2 flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] font-black">Khusus Eksak</span>
-                      <span>D. Soal Kuantitatif Berangka & Diagram (Matematika, Fisika, Kimia)</span>
+                      <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] font-black">Asesmen Nyata</span>
+                      <span>D. Soal Kuantitatif Berangka & Rumus Sesuai Fase (Matematika, Fisika, Kimia, Informatika, Ekonomi, dll.)</span>
                     </h4>
                     <p className="text-xs text-slate-600 dark:text-slate-300 mb-2">
-                      Ketika Anda memilih mata pelajaran <strong>Matematika</strong>, <strong>Fisika</strong>, atau <strong>Kimia</strong>, sistem secara otomatis mengaktifkan mesin perhitungan kuantitatif:
+                      Ketika Anda memilih mata pelajaran eksak atau bermuatan numerik (Matematika, Fisika, Kimia, Informatika/Koding, Ekonomi, Biologi, Geografi), sistem secara otomatis mengaktifkan mesin perhitungan kuantitatif autentik:
                     </p>
                     <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 pl-5 list-disc">
-                      <li><strong>Bukan Soal Teori / Hafalan:</strong> Soal menyajikan skenario berbasis angka, parameter fisik, data percobaan, dan perhitungan nyata.</li>
-                      <li><strong>Diagram Teknis Vektor (SVG):</strong> Dilengkapi diagram yang dirujuk langsung pada stimulus soal, seperti <em>Free Body Diagram (FBD)</em> gaya gesek/bidang miring, rangkaian resistor seri-paralel, kurva grafik kecepatan-waktu (\(v-t\)), geometri segitiga siku-siku & trigonometri, parabola fungsi kuadrat, instalasi titrasi buret-erlenmeyer, hingga diagram tingkat energi entalpi (\(\Delta H\)).</li>
-                      <li><strong>Pembahasan Sistematis:</strong> Setiap butir soal dilengkapi tahapan lengkap: <em>Diketahui, Ditanya, Rumus, Perhitungan Angka Rinci, dan Kesimpulan Satuan</em>.</li>
-                      <li><strong>Rapi pada Dokumen Word (.doc):</strong> Diagram teknis SVG disematkan langsung ke naskah soal dan kartu soal saat diunduh.</li>
+                      <li><strong>Natural Sesuai Fase & Kelas:</strong> 
+                        <br />• <em>SD (Fase A/B/C):</em> Hitungan bilangan cacah, operasi pecahan belanja/panen, keliling/luas taman persegi panjang, skala denah rumah, volume bak balok & debit air, statistika rata-rata (mean).
+                        <br />• <em>SMP (Fase D):</em> Aljabar SPLDV, teorema Pythagoras segitiga siku-siku, luas juring & busur lingkaran, volume tabung, gradien garis lurus.
+                        <br />• <em>SMA/SMK (Fase E/F):</em> Trigonometri sudut elevasi/aturan sinus, kurva fungsi kuadrat parabola Kartesius, barisan & deret aritmetika/geometri, persamaan eksponen & logaritma, matriks, kalkulus turunan fungsi.
+                      </li>
+                      <li><strong>Mata Pelajaran Terapan Lainnya:</strong>
+                        <br />• <em>Fisika:</em> FBD gaya gesek bidang miring, hukum Kirchhoff rangkaian resistor seri-paralel, grafik gerak \(v-t\) trapesium, usaha energi mekanik.
+                        <br />• <em>Kimia:</em> Titrasi asam-basa volumetri buret-erlenmeyer, perubahan entalpi \(\Delta H\) termokimia, stoikiometri volume STP gas, potensial sel Volta standar.
+                        <br />• <em>Informatika & Koding:</em> Subnetting IPv4 CIDR /26 host valid, konversi biner 8-bit ke desimal & heksadesimal, kompleksitas algoritma perulangan Big-O \(O(n^2)\), metrik akurasi & presisi AI.
+                        <br />• <em>Ekonomi:</em> Keseimbangan pasar \(Q_d = Q_s\), Break Even Point (BEP unit & rupiah), koefisien elastisitas permintaan.
+                        <br />• <em>Biologi & Geografi:</em> Persilangan dihibrid Mendel rasio 9:3:3:1 pada populasi riil, piramida aliran energi 10%, skala peta dan kontur interval (CI).
+                      </li>
+                      <li><strong>Bukan Soal Teori / Hafalan:</strong> Menyajikan data numerik nyata, satuan resmi, dan formula ilmiah yang harus dihitung layaknya ujian TKA, UTBK/SNBT, dan Asesmen Sumatif standar nasional.</li>
+                      <li><strong>Pembahasan Terstruktur:</strong> Disertai tahapan pengerjaan runut: <em>Diketahui, Ditanya, Rumus, Perhitungan Angka Rinci, dan Kesimpulan Satuan</em>.</li>
+                      <li><strong>Diagram Teknis Vektor (SVG):</strong> Diagram tersemat langsung pada naskah soal dan kartu soal di aplikasi maupun saat diekspor ke Microsoft Word (.doc).</li>
                     </ul>
                   </div>
                 </div>

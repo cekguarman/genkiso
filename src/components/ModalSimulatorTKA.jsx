@@ -90,66 +90,146 @@ const buildExamPool = (sourceQuestions, targetCount, config) => {
       }
     ];
   } else if (subjectCategory === 'matematika') {
-    topicBank = [
-      {
-        q: 'Pada segitiga siku-siku ABC di B dengan panjang alas AB = 12 cm dan tinggi BC = 5 cm, tentukan panjang sisi miring AC dan nilai sin α + cos α!',
-        opts: [
-          { key: 'A', text: 'AC = 13 cm dan 17/13' },
-          { key: 'B', text: 'AC = 13 cm dan 12/13' },
-          { key: 'C', text: 'AC = 15 cm dan 17/15' },
-          { key: 'D', text: 'AC = 13 cm dan 7/13' },
-          { key: 'E', text: 'AC = 17 cm dan 15/17' }
-        ],
-        ans: 'A',
-        exp: 'AC = √(12² + 5²) = 13 cm. sin α = 5/13, cos α = 12/13. sin + cos = 17/13.',
-        diff: 'Mudah',
-        lvl: 'C3',
-        svgType: 'math_geometry_triangle'
-      },
-      {
-        q: 'Tentukan koordinat titik puncak dan titik potong sumbu-X dari grafik kurva parabola fungsi kuadrat f(x) = x² - 6x + 5!',
-        opts: [
-          { key: 'A', text: 'Puncak (2, -3) dan titik potong (2, 0) dan (3, 0)' },
-          { key: 'B', text: 'Puncak (3, -9) dan titik potong (-1, 0) dan (5, 0)' },
-          { key: 'C', text: 'Puncak (3, -4) dan titik potong (1, 0) dan (5, 0)' },
-          { key: 'D', text: 'Puncak (-3, 4) dan titik potong (-1, 0) dan (-5, 0)' },
-          { key: 'E', text: 'Puncak (3, 4) dan titik potong (1, 0) dan (5, 0)' }
-        ],
-        ans: 'C',
-        exp: 'xp = -(-6)/2 = 3. yp = 3² - 6(3) + 5 = -4 => Puncak (3, -4). Pembuat nol: (x-1)(x-5)=0 => x=1, x=5.',
-        diff: 'Sedang',
-        lvl: 'C3',
-        svgType: 'math_function_graph'
-      },
-      {
-        q: 'Diberikan SPLDV: 3x + 2y = 28 dan 2x + 5y = 37. Berapakah nilai dari penyelesaian (4x - y)?',
-        opts: [
-          { key: 'A', text: '14' },
-          { key: 'B', text: '19' },
-          { key: 'C', text: '24' },
-          { key: 'D', text: '28' },
-          { key: 'E', text: '32' }
-        ],
-        ans: 'B',
-        exp: 'Eliminasi menghasilkan x = 6 dan y = 5. Nilai 4x - y = 4(6) - 5 = 19.',
-        diff: 'Sedang',
-        lvl: 'C3'
-      },
-      {
-        q: 'Sebuah lingkaran berpusat di O memiliki jari-jari r = 14 cm dan sudut juring AOB = 90°. Hitunglah luas juring AOB dan panjang busur AB! (π = 22/7)',
-        opts: [
-          { key: 'A', text: 'Luas = 77 cm² dan Busur = 11 cm' },
-          { key: 'B', text: 'Luas = 110 cm² dan Busur = 18 cm' },
-          { key: 'C', text: 'Luas = 154 cm² dan Busur = 22 cm' },
-          { key: 'D', text: 'Luas = 308 cm² dan Busur = 44 cm' },
-          { key: 'E', text: 'Luas = 616 cm² dan Busur = 88 cm' }
-        ],
-        ans: 'C',
-        exp: 'Luas = ¼ x (22/7) x 14² = 154 cm². Panjang busur = ¼ x 2 x (22/7) x 14 = 22 cm.',
-        diff: 'Sedang',
-        lvl: 'C3'
-      }
-    ];
+    const isSD = ['A', 'B', 'C'].includes(config?.fase) || (config?.kelas || '').toLowerCase().includes('sd');
+    if (isSD) {
+      topicBank = [
+        {
+          q: 'Pak Arman memanen 48 kg mangga. Sebanyak 3/8 bagian dibagikan ke warga dan 1/4 bagian dijual ke pasar. Berapa sisa buah mangga yang disimpan untuk keluarga?',
+          opts: [
+            { key: 'A', text: '12 kg' },
+            { key: 'B', text: '18 kg' },
+            { key: 'C', text: '20 kg' },
+            { key: 'D', text: '24 kg' },
+            { key: 'E', text: '30 kg' }
+          ],
+          ans: 'B',
+          exp: 'Dibagikan: (3/8) × 48 = 18 kg. Dijual: (1/4) × 48 = 12 kg. Sisa = 48 - (18 + 12) = 18 kg.',
+          diff: 'Mudah',
+          lvl: 'C2',
+          svgType: 'math_sd_rectangle'
+        },
+        {
+          q: 'Sebuah taman sekolah berbentuk persegi panjang berukuran panjang 24 meter dan lebar 15 meter. Di sekeliling taman dipasang lampu tiap 3 meter. Hitunglah luas taman dan banyak tiang lampu yang dibutuhkan!',
+          opts: [
+            { key: 'A', text: 'Luas = 300 m² dan 20 tiang lampu' },
+            { key: 'B', text: 'Luas = 360 m² dan 39 tiang lampu' },
+            { key: 'C', text: 'Luas = 360 m² dan 26 tiang lampu' },
+            { key: 'D', text: 'Luas = 390 m² dan 26 tiang lampu' },
+            { key: 'E', text: 'Luas = 360 m² dan 52 tiang lampu' }
+          ],
+          ans: 'C',
+          exp: 'Luas = 24 × 15 = 360 m². Keliling = 2(24 + 15) = 78 m. Lampu = 78 / 3 = 26 tiang.',
+          diff: 'Sedang',
+          lvl: 'C3',
+          svgType: 'math_sd_rectangle'
+        },
+        {
+          q: 'Sebuah bak penampungan air berbentuk balok berukuran panjang 120 cm, lebar 80 cm, dan tinggi 75 cm. Bak diisi air dengan debit 15 liter/menit. Berapakah waktu yang diperlukan hingga bak penuh?',
+          opts: [
+            { key: 'A', text: '36 menit' },
+            { key: 'B', text: '40 menit' },
+            { key: 'C', text: '45 menit' },
+            { key: 'D', text: '48 menit' },
+            { key: 'E', text: '54 menit' }
+          ],
+          ans: 'D',
+          exp: 'Volume = 120 × 80 × 75 = 720.000 cm³ = 720 Liter. Waktu = 720 / 15 = 48 menit.',
+          diff: 'Sedang',
+          lvl: 'C3',
+          svgType: 'math_sd_rectangle'
+        },
+        {
+          q: 'Data ulangan 5 orang siswa adalah 78, 85, 90, 82, dan 95. Setelah seorang siswa baru masuk, rata-rata 6 siswa menjadi 84. Berapakah nilai siswa baru tersebut?',
+          opts: [
+            { key: 'A', text: '68' },
+            { key: 'B', text: '72' },
+            { key: 'C', text: '76' },
+            { key: 'D', text: '80' },
+            { key: 'E', text: '84' }
+          ],
+          ans: 'B',
+          exp: 'Total 5 siswa = 432. Total 6 siswa = 6 × 84 = 504. Nilai siswa baru = 504 - 432 = 72.',
+          diff: 'Mudah',
+          lvl: 'C3'
+        }
+      ];
+    } else {
+      topicBank = [
+        {
+          q: 'Pada segitiga siku-siku ABC di B dengan panjang alas AB = 12 cm dan tinggi BC = 5 cm, tentukan panjang sisi miring AC dan nilai sin α + cos α!',
+          opts: [
+            { key: 'A', text: 'AC = 13 cm dan 17/13' },
+            { key: 'B', text: 'AC = 13 cm dan 12/13' },
+            { key: 'C', text: 'AC = 15 cm dan 17/15' },
+            { key: 'D', text: 'AC = 13 cm dan 7/13' },
+            { key: 'E', text: 'AC = 17 cm dan 15/17' }
+          ],
+          ans: 'A',
+          exp: 'AC = √(12² + 5²) = 13 cm. sin α = 5/13, cos α = 12/13. sin + cos = 17/13.',
+          diff: 'Mudah',
+          lvl: 'C3',
+          svgType: 'math_geometry_triangle'
+        },
+        {
+          q: 'Tentukan koordinat titik puncak dan titik potong sumbu-X dari grafik kurva parabola fungsi kuadrat f(x) = x² - 6x + 5!',
+          opts: [
+            { key: 'A', text: 'Puncak (2, -3) dan titik potong (2, 0) dan (3, 0)' },
+            { key: 'B', text: 'Puncak (3, -9) dan titik potong (-1, 0) dan (5, 0)' },
+            { key: 'C', text: 'Puncak (3, -4) dan titik potong (1, 0) dan (5, 0)' },
+            { key: 'D', text: 'Puncak (-3, 4) dan titik potong (-1, 0) dan (-5, 0)' },
+            { key: 'E', text: 'Puncak (3, 4) dan titik potong (1, 0) dan (5, 0)' }
+          ],
+          ans: 'C',
+          exp: 'xp = -(-6)/2 = 3. yp = 3² - 6(3) + 5 = -4 => Puncak (3, -4). Pembuat nol: (x-1)(x-5)=0 => x=1, x=5.',
+          diff: 'Sedang',
+          lvl: 'C3',
+          svgType: 'math_function_graph'
+        },
+        {
+          q: 'Diberikan SPLDV: 3x + 2y = 28 dan 2x + 5y = 37. Berapakah nilai dari penyelesaian (4x - y)?',
+          opts: [
+            { key: 'A', text: '14' },
+            { key: 'B', text: '19' },
+            { key: 'C', text: '24' },
+            { key: 'D', text: '28' },
+            { key: 'E', text: '32' }
+          ],
+          ans: 'B',
+          exp: 'Eliminasi menghasilkan x = 6 dan y = 5. Nilai 4x - y = 4(6) - 5 = 19.',
+          diff: 'Sedang',
+          lvl: 'C3'
+        },
+        {
+          q: 'Sebuah lingkaran berpusat di O memiliki jari-jari r = 14 cm dan sudut juring AOB = 90°. Hitunglah luas juring AOB dan panjang busur AB! (π = 22/7)',
+          opts: [
+            { key: 'A', text: 'Luas = 77 cm² dan Busur = 11 cm' },
+            { key: 'B', text: 'Luas = 110 cm² dan Busur = 18 cm' },
+            { key: 'C', text: 'Luas = 154 cm² dan Busur = 22 cm' },
+            { key: 'D', text: 'Luas = 308 cm² dan Busur = 44 cm' },
+            { key: 'E', text: 'Luas = 616 cm² dan Busur = 88 cm' }
+          ],
+          ans: 'C',
+          exp: 'Luas = ¼ x (22/7) x 14² = 154 cm². Panjang busur = ¼ x 2 x (22/7) x 14 = 22 cm.',
+          diff: 'Sedang',
+          lvl: 'C3',
+          svgType: 'math_geometry_circle'
+        },
+        {
+          q: 'Diketahui deret aritmetika dengan suku ke-3 = 11 dan suku ke-8 = 31. Berapakah jumlah 15 suku pertama (S₁₅)?',
+          opts: [
+            { key: 'A', text: '420' },
+            { key: 'B', text: '465' },
+            { key: 'C', text: '485' },
+            { key: 'D', text: '510' },
+            { key: 'E', text: '520' }
+          ],
+          ans: 'B',
+          exp: '5b = 20 => b = 4; a = 11 - 8 = 3. S15 = (15/2)[2(3) + 14(4)] = (15/2)(62) = 465.',
+          diff: 'Sedang',
+          lvl: 'C3'
+        }
+      ];
+    }
   } else if (subjectCategory === 'kimia') {
     topicBank = [
       {
@@ -211,11 +291,154 @@ const buildExamPool = (sourceQuestions, targetCount, config) => {
         lvl: 'C3'
       }
     ];
-  } else {
-    // Default: Informatika & Komputasi
+  } else if (subjectCategory === 'informatika') {
     topicBank = [
       {
-        q: 'Manakah dari skenario berikut yang merepresentasikan penerapan teknik Dekomposisi dalam berpikir komputasional?',
+        q: 'Sebuah laboratorium komputer diberikan blok alamat IP 192.168.10.75/26. Tentukan Subnet Mask, Network ID, dan jumlah host valid yang dapat digunakan!',
+        opts: [
+          { key: 'A', text: 'Mask: 255.255.255.128, Net ID: 192.168.10.0, 126 host' },
+          { key: 'B', text: 'Mask: 255.255.255.192, Net ID: 192.168.10.64, 62 host' },
+          { key: 'C', text: 'Mask: 255.255.255.192, Net ID: 192.168.10.75, 64 host' },
+          { key: 'D', text: 'Mask: 255.255.255.224, Net ID: 192.168.10.64, 30 host' },
+          { key: 'E', text: 'Mask: 255.255.255.192, Net ID: 192.168.10.0, 62 host' }
+        ],
+        ans: 'B',
+        exp: 'Prefix /26 bernilai 255.255.255.192 (interval 64). Host .75 berada di subnet 64-127. Network ID = 192.168.10.64. Host valid = 2⁶ - 2 = 62.',
+        diff: 'Sedang',
+        lvl: 'C3',
+        svgType: 'cs_subnet_binary'
+      },
+      {
+        q: 'Konversikan nilai biner 8-bit register 11010110₂ ke sistem bilangan Desimal (basis 10) dan Heksadesimal (basis 16)!',
+        opts: [
+          { key: 'A', text: 'Desimal: 198₁₀ dan Heksadesimal: C6₁₆' },
+          { key: 'B', text: 'Desimal: 210₁₀ dan Heksadesimal: D2₁₆' },
+          { key: 'C', text: 'Desimal: 214₁₀ dan Heksadesimal: D6₁₆' },
+          { key: 'D', text: 'Desimal: 222₁₀ dan Heksadesimal: E6₁₆' },
+          { key: 'E', text: 'Desimal: 214₁₀ dan Heksadesimal: E2₁₆' }
+        ],
+        ans: 'C',
+        exp: 'Desimal: 128 + 64 + 16 + 4 + 2 = 214₁₀. Heksadesimal: 1101₂ = D, 0110₂ = 6 => D6₁₆.',
+        diff: 'Mudah',
+        lvl: 'C3',
+        svgType: 'cs_subnet_binary'
+      },
+      {
+        q: 'Diberikan algoritma perulangan bersarang: for i = 1 to n do: for j = 1 to i do: eksekusi(). Untuk n = 20, berapakah total eksekusi dan kompleksitas asimtotik Big-O nya?',
+        opts: [
+          { key: 'A', text: '210 kali eksekusi dan O(n²)' },
+          { key: 'B', text: '400 kali eksekusi dan O(n²)' },
+          { key: 'C', text: '190 kali eksekusi dan O(n log n)' },
+          { key: 'D', text: '210 kali eksekusi dan O(n)' },
+          { key: 'E', text: '200 kali eksekusi dan O(n²)' }
+        ],
+        ans: 'A',
+        exp: 'Total eksekusi = n(n + 1)/2 = (20 × 21)/2 = 210 kali. Kompleksitas waktu = O(n²).',
+        diff: 'Sedang',
+        lvl: 'C4'
+      },
+      {
+        q: 'Uji model AI klasifikasi terhadap 200 data menghasilkan TP = 85, TN = 70, FP = 15, FN = 30. Berapakah nilai Akurasi dan Presisi model tersebut?',
+        opts: [
+          { key: 'A', text: 'Akurasi = 70,0% dan Presisi = 74,0%' },
+          { key: 'B', text: 'Akurasi = 77,5% dan Presisi = 73,9%' },
+          { key: 'C', text: 'Akurasi = 77,5% dan Presisi = 85,0%' },
+          { key: 'D', text: 'Akurasi = 85,0% dan Presisi = 77,5%' },
+          { key: 'E', text: 'Akurasi = 80,0% dan Presisi = 85,0%' }
+        ],
+        ans: 'C',
+        exp: 'Akurasi = (85 + 70)/200 = 77,5%. Presisi = 85/(85 + 15) = 85/100 = 85,0%.',
+        diff: 'Sedang',
+        lvl: 'C3'
+      }
+    ];
+  } else if (subjectCategory === 'ekonomi') {
+    topicBank = [
+      {
+        q: 'Fungsi permintaan pasar Qd = 80 - 2P dan penawaran Qs = -20 + 3P. Tentukan harga keseimbangan (P*) dan kuantitas keseimbangan (Q*) pasar!',
+        opts: [
+          { key: 'A', text: 'P* = Rp 20 dan Q* = 40 unit' },
+          { key: 'B', text: 'P* = Rp 25 dan Q* = 30 unit' },
+          { key: 'C', text: 'P* = Rp 20 dan Q* = 50 unit' },
+          { key: 'D', text: 'P* = Rp 15 dan Q* = 50 unit' },
+          { key: 'E', text: 'P* = Rp 30 dan Q* = 20 unit' }
+        ],
+        ans: 'A',
+        exp: 'Qd = Qs => 80 - 2P = -20 + 3P => 5P = 100 => P* = 20. Q* = 80 - 2(20) = 40 unit.',
+        diff: 'Sedang',
+        lvl: 'C3',
+        svgType: 'econ_market_curve'
+      },
+      {
+        q: 'Biaya tetap usaha minuman adalah Rp 12.000.000/bulan, biaya variabel Rp 40.000/botol, dan harga jual Rp 70.000/botol. Hitunglah BEP dalam unit!',
+        opts: [
+          { key: 'A', text: '300 botol' },
+          { key: 'B', text: '400 botol' },
+          { key: 'C', text: '450 botol' },
+          { key: 'D', text: '500 botol' },
+          { key: 'E', text: '600 botol' }
+        ],
+        ans: 'B',
+        exp: 'BEP = FC / (P - VC) = 12.000.000 / (70.000 - 40.000) = 12.000.000 / 30.000 = 400 botol.',
+        diff: 'Sedang',
+        lvl: 'C3'
+      }
+    ];
+  } else if (subjectCategory === 'biologi') {
+    topicBank = [
+      {
+        q: 'Persilangan dihibrid heterozigot BbKk × BbKk menghasilkan 320 keturunan F2. Berapakah jumlah keturunan dengan fenotipe bulat hijau?',
+        opts: [
+          { key: 'A', text: '20 tanaman' },
+          { key: 'B', text: '60 tanaman' },
+          { key: 'C', text: '180 tanaman' },
+          { key: 'D', text: '100 tanaman' },
+          { key: 'E', text: '120 tanaman' }
+        ],
+        ans: 'B',
+        exp: 'Rasio bulat hijau = 3/16. Jumlah tanaman = (3/16) × 320 = 60 tanaman.',
+        diff: 'Sedang',
+        lvl: 'C3',
+        svgType: 'bio_mendel_punnett'
+      },
+      {
+        q: 'Tumbuhan produsen menyimpan energi 50.000 kkal. Mengacu efisiensi trofik 10%, berapa energi yang diterima konsumen tingkat III (tersier)?',
+        opts: [
+          { key: 'A', text: '5.000 kkal' },
+          { key: 'B', text: '500 kkal' },
+          { key: 'C', text: '50 kkal' },
+          { key: 'D', text: '5 kkal' },
+          { key: 'E', text: '0,5 kkal' }
+        ],
+        ans: 'C',
+        exp: 'Konsumen I = 5.000 kkal, Konsumen II = 500 kkal, Konsumen III = 50 kkal.',
+        diff: 'Mudah',
+        lvl: 'C2'
+      }
+    ];
+  } else if (subjectCategory === 'geografi') {
+    topicBank = [
+      {
+        q: 'Peta berskala 1 : 50.000 memiliki jarak antara titik A dan B sebesar 6,0 cm. Tentukan Kontur Interval (CI) dan jarak sebenarnya di lapangan!',
+        opts: [
+          { key: 'A', text: 'CI = 25 meter dan Jarak Sebenarnya = 3,0 km' },
+          { key: 'B', text: 'CI = 50 meter dan Jarak Sebenarnya = 3,0 km' },
+          { key: 'C', text: 'CI = 25 meter dan Jarak Sebenarnya = 30 km' },
+          { key: 'D', text: 'CI = 20 meter dan Jarak Sebenarnya = 3,0 km' },
+          { key: 'E', text: 'CI = 25 meter dan Jarak Sebenarnya = 1,5 km' }
+        ],
+        ans: 'A',
+        exp: 'CI = (1/2000) × 50.000 = 25 meter. Jarak sebenarnya = 6 cm × 50.000 = 300.000 cm = 3,0 km.',
+        diff: 'Sedang',
+        lvl: 'C3',
+        svgType: 'geo_contour_map'
+      }
+    ];
+  } else {
+    // Default Umum
+    topicBank = [
+      {
+        q: 'Manakah dari skenario berikut yang merepresentasikan penerapan teknik Dekomposisi dalam pemecahan masalah?',
         opts: [
           { key: 'A', text: 'Memecah program aplikasi kasir menjadi sub-modul inventaris barang, kalkulasi harga, dan cetak struk pembayaran.' },
           { key: 'B', text: 'Mengabaikan jenis font teks saat merancang skema basis data relasional.' },
@@ -241,34 +464,6 @@ const buildExamPool = (sourceQuestions, targetCount, config) => {
         exp: 'Fitur Undo/Redo menyimpan riwayat aksi pengguna dalam struktur data Stack (LIFO), di mana aksi terakhir yang dilakukan akan dibatalkan pertama kali.',
         diff: 'Sedang',
         lvl: 'C3'
-      },
-      {
-        q: 'Diberikan larik (array) bilangan bulat: [29, 10, 14, 37, 13]. Jika diurutkan secara menaik (ascending) menggunakan Selection Sort pada putaran pertama, elemen terkecil akan ditukar dengan elemen berindeks ke-...',
-        opts: [
-          { key: 'A', text: '0 (elemen pertama)' },
-          { key: 'B', text: '1 (elemen kedua)' },
-          { key: 'C', text: '2 (elemen ketiga)' },
-          { key: 'D', text: '4 (elemen terakhir)' },
-          { key: 'E', text: 'Tidak ada penukaran posisi' }
-        ],
-        ans: 'A',
-        exp: 'Pada Selection Sort putaran pertama, sistem mencari nilai minimum di seluruh larik (angka 10) lalu menukarnya ke posisi paling awal (indeks 0).',
-        diff: 'Sedang',
-        lvl: 'C3'
-      },
-      {
-        q: 'Mengapa algoritma Binary Search memiliki kompleksitas waktu yang jauh lebih efisien O(log n) dibandingkan Linear Search O(n)?',
-        opts: [
-          { key: 'A', text: 'Binary Search membagi dua ruang pencarian secara berulang pada setiap tahap pembandingan.' },
-          { key: 'B', text: 'Binary Search tidak memerlukan memori tambahan saat eksekusi.' },
-          { key: 'C', text: 'Binary Search dapat mencari data tanpa perlu data diurutkan terlebih dahulu.' },
-          { key: 'D', text: 'Binary Search bekerja dengan cara memeriksa elemen dari dua sisi secara bersamaan.' },
-          { key: 'E', text: 'Binary Search hanya dapat memproses tipe data string singkat.' }
-        ],
-        ans: 'A',
-        exp: 'Dengan membagi ruang pencarian menjadi setengah pada setiap langkah, jumlah iterasi berkurang secara logaritmik terhadap ukuran data n.',
-        diff: 'Sulit',
-        lvl: 'C4'
       }
     ];
   }
