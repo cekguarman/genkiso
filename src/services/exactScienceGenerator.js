@@ -149,8 +149,140 @@ export const detectSubjectCategory = (mapel = '', topik = '') => {
   return 'umum';
 };
 
-export const isQuantitativeSubject = (category) => {
-  return ['matematika', 'fisika', 'kimia', 'informatika', 'ekonomi', 'biologi', 'geografi'].includes(category);
+export const isQuantitativeSubject = (category, mapel = '', topik = '') => {
+  const combined = `${mapel} ${topik}`.toLowerCase();
+  if (category === 'matematika' || category === 'fisika' || category === 'kimia') {
+    return true;
+  }
+  if (category === 'informatika') {
+    // Kuantitatif bila materi melibatkan hitungan numerik/jaringan/bit/logika biner
+    return (
+      combined.includes('subnet') ||
+      combined.includes('biner') ||
+      combined.includes('heksa') ||
+      combined.includes('boolean') ||
+      combined.includes('gerbang logika') ||
+      combined.includes('big-o') ||
+      combined.includes('kompleksitas') ||
+      combined.includes('confusion matrix') ||
+      combined.includes('hitungan')
+    );
+  }
+  if (category === 'ekonomi') {
+    return (
+      combined.includes('keseimbangan') ||
+      combined.includes('bep') ||
+      combined.includes('break even') ||
+      combined.includes('elastisitas') ||
+      combined.includes('pendapatan nasional') ||
+      combined.includes('hitungan')
+    );
+  }
+  if (category === 'biologi') {
+    return (
+      combined.includes('mendel') ||
+      combined.includes('persilangan') ||
+      combined.includes('dihibrid') ||
+      combined.includes('monohibrid') ||
+      combined.includes('piramida') ||
+      combined.includes('trofik') ||
+      combined.includes('aliran energi')
+    );
+  }
+  if (category === 'geografi') {
+    return (
+      combined.includes('skala') ||
+      combined.includes('kontur') ||
+      combined.includes('ci') ||
+      combined.includes('titik henti')
+    );
+  }
+  return false;
+};
+
+/**
+ * Resolver Sub-Topik Eksak Presisi Berdasarkan Input User di Langkah 1
+ */
+export const resolveExactSubTopic = (subjectCategory, topikCapaian, isSD, isSMP, idx) => {
+  const clean = (topikCapaian || '').toLowerCase();
+
+  if (subjectCategory === 'matematika') {
+    if (isSD) {
+      if (clean.includes('pecah') || clean.includes('desimal') || clean.includes('persen')) return 'sd_pecahan';
+      if (clean.includes('bangun datar') || clean.includes('keliling') || clean.includes('persegi') || clean.includes('luas')) return 'sd_bangun_datar';
+      if (clean.includes('skala') || clean.includes('denah') || clean.includes('peta')) return 'sd_skala';
+      if (clean.includes('volume') || clean.includes('debit') || clean.includes('balok') || clean.includes('kubus')) return 'sd_volume_debit';
+      if (clean.includes('statistik') || clean.includes('rata') || clean.includes('diagram') || clean.includes('modus')) return 'sd_statistika';
+      const sdSubTopics = ['sd_pecahan', 'sd_bangun_datar', 'sd_skala', 'sd_volume_debit', 'sd_statistika'];
+      return sdSubTopics[idx % sdSubTopics.length];
+    } else if (isSMP) {
+      if (clean.includes('pythagoras') || clean.includes('segitiga siku') || clean.includes('hipotenusa')) return 'smp_pythagoras';
+      if (clean.includes('spldv') || clean.includes('linear') || clean.includes('dua variabel') || clean.includes('persamaan')) return 'smp_spldv';
+      if (clean.includes('lingkar') || clean.includes('juring') || clean.includes('busur')) return 'smp_lingkaran';
+      if (clean.includes('bangun ruang') || clean.includes('tabung') || clean.includes('kerucut') || clean.includes('bola')) return 'smp_bangun_ruang';
+      if (clean.includes('garis') || clean.includes('gradien')) return 'smp_garis_lurus';
+      const smpSubTopics = ['smp_pythagoras', 'smp_spldv', 'smp_lingkaran', 'smp_bangun_ruang', 'smp_garis_lurus'];
+      return smpSubTopics[idx % smpSubTopics.length];
+    } else {
+      if (clean.includes('fungsi kuadrat') || clean.includes('parabola') || clean.includes('kuadrat')) return 'sma_fungsi_kuadrat';
+      if (clean.includes('trigono') || clean.includes('sinus') || clean.includes('cosinus') || clean.includes('sudut')) return 'sma_trigonometri';
+      if (clean.includes('deret') || clean.includes('baris') || clean.includes('aritmetika') || clean.includes('geometri')) return 'sma_deret';
+      if (clean.includes('logaritma') || clean.includes('eksponen') || clean.includes('pangkat')) return 'sma_logaritma';
+      if (clean.includes('turunan') || clean.includes('diferensial') || clean.includes('kalkulus') || clean.includes('laju')) return 'sma_turunan';
+      if (clean.includes('matriks') || clean.includes('determinan') || clean.includes('invers')) return 'sma_matriks';
+      const smaSubTopics = ['sma_fungsi_kuadrat', 'sma_trigonometri', 'sma_deret', 'sma_logaritma', 'sma_turunan', 'sma_matriks'];
+      return smaSubTopics[idx % smaSubTopics.length];
+    }
+  }
+
+  if (subjectCategory === 'fisika') {
+    if (clean.includes('listrik') || clean.includes('ohm') || clean.includes('rangkaian') || clean.includes('hambatan') || clean.includes('arus') || clean.includes('kirchhoff')) return 'rangkaian_listrik';
+    if (clean.includes('kinematika') || clean.includes('glbb') || clean.includes('kecepatan') || clean.includes('gerak') || clean.includes('v-t')) return 'kinematika_vt';
+    if (clean.includes('usaha') || clean.includes('energi') || clean.includes('daya') || clean.includes('potensial') || clean.includes('kinetik')) return 'usaha_energi';
+    if (clean.includes('newton') || clean.includes('gaya') || clean.includes('dinamika') || clean.includes('gesek')) return 'dinamika_gaya';
+    const physicsTopics = ['dinamika_gaya', 'rangkaian_listrik', 'kinematika_vt', 'usaha_energi'];
+    return physicsTopics[idx % physicsTopics.length];
+  }
+
+  if (subjectCategory === 'kimia') {
+    if (clean.includes('titrasi') || clean.includes('asam basa') || clean.includes('netralisasi')) return 'titrasi_asam_basa';
+    if (clean.includes('termokimia') || clean.includes('entalpi') || clean.includes('kalor') || clean.includes('eksoterm')) return 'termokimia_entalpi';
+    if (clean.includes('stoikiometri') || clean.includes('mol') || clean.includes('massa molar') || clean.includes('reaksi')) return 'stoikiometri_reaksi';
+    if (clean.includes('volta') || clean.includes('redoks') || clean.includes('elektrokimia') || clean.includes('potensial sel')) return 'elektrokimia_volta';
+    const chemTopics = ['titrasi_asam_basa', 'termokimia_entalpi', 'stoikiometri_reaksi', 'elektrokimia_volta'];
+    return chemTopics[idx % chemTopics.length];
+  }
+
+  if (subjectCategory === 'informatika') {
+    if (clean.includes('subnet') || clean.includes('cidr') || clean.includes('ip') || clean.includes('jaringan')) return 'cs_subnetting';
+    if (clean.includes('biner') || clean.includes('heksa') || clean.includes('konversi')) return 'cs_biner';
+    if (clean.includes('boolean') || clean.includes('gerbang') || clean.includes('logika')) return 'cs_boolean';
+    if (clean.includes('kompleksitas') || clean.includes('big-o') || clean.includes('algoritma')) return 'cs_kompleksitas';
+    if (clean.includes('ai') || clean.includes('machine learning') || clean.includes('confusion matrix')) return 'cs_ai_metrik';
+    const csTopics = ['cs_subnetting', 'cs_biner', 'cs_boolean', 'cs_kompleksitas', 'cs_ai_metrik'];
+    return csTopics[idx % csTopics.length];
+  }
+
+  if (subjectCategory === 'ekonomi') {
+    if (clean.includes('bep') || clean.includes('break even') || clean.includes('titik impas')) return 'econ_bep';
+    if (clean.includes('elastisitas') || clean.includes('koefisien')) return 'econ_elastisitas';
+    if (clean.includes('keseimbangan') || clean.includes('pasar') || clean.includes('permintaan') || clean.includes('penawaran')) return 'econ_keseimbangan';
+    const econTopics = ['econ_keseimbangan', 'econ_bep', 'econ_elastisitas'];
+    return econTopics[idx % econTopics.length];
+  }
+
+  if (subjectCategory === 'biologi') {
+    if (clean.includes('mendel') || clean.includes('genetika') || clean.includes('persilangan')) return 'bio_mendel';
+    if (clean.includes('energi') || clean.includes('trofik') || clean.includes('makanan') || clean.includes('ekosistem')) return 'bio_energi';
+    const bioTopics = ['bio_mendel', 'bio_energi'];
+    return bioTopics[idx % bioTopics.length];
+  }
+
+  if (subjectCategory === 'geografi') {
+    return 'geo_contour_map';
+  }
+
+  return 'umum';
 };
 
 /**
@@ -647,8 +779,8 @@ export const generateExactScienceQuestion = ({
   let explanation = '';
   let svgType = 'physics_fbd';
 
-  const isSD = ['A', 'B', 'C'].includes(fase) || kelas.toLowerCase().includes('sd') || ['1','2','3','4','5','6'].some(k => kelas.includes(k));
-  const isSMP = fase === 'D' || kelas.toLowerCase().includes('smp') || ['7','8','9'].some(k => kelas.includes(k));
+  const isSD = ['A', 'B', 'C'].includes(fase) || kelas.toLowerCase().includes('sd') || /\b[1-6]\b/.test(kelas);
+  const isSMP = fase === 'D' || kelas.toLowerCase().includes('smp') || /\b[7-9]\b/.test(kelas);
 
   // =========================================================================
   // 1. MATA PELAJARAN MATEMATIKA
@@ -658,8 +790,7 @@ export const generateExactScienceQuestion = ({
       // -------------------------------------------------------------
       // MATEMATIKA JENJANG SD (FASE A / B / C)
       // -------------------------------------------------------------
-      const sdSubTopics = ['sd_pecahan', 'sd_bangun_datar', 'sd_skala', 'sd_volume_debit', 'sd_statistika'];
-      const chosen = sdSubTopics[idx % sdSubTopics.length];
+      const chosen = resolveExactSubTopic('matematika', topikCapaian, true, false, idx);
 
       if (chosen === 'sd_pecahan') {
         svgType = 'math_sd_rectangle';
@@ -798,8 +929,7 @@ Jawaban yang benar adalah opsi ${correctKey} (72).`;
       // -------------------------------------------------------------
       // MATEMATIKA JENJANG SMP (FASE D)
       // -------------------------------------------------------------
-      const smpSubTopics = ['smp_pythagoras', 'smp_spldv', 'smp_lingkaran', 'smp_bangun_ruang', 'smp_garis_lurus'];
-      const chosen = smpSubTopics[idx % smpSubTopics.length];
+      const chosen = resolveExactSubTopic('matematika', topikCapaian, false, true, idx);
 
       if (chosen === 'smp_pythagoras') {
         svgType = 'math_geometry_triangle';
@@ -911,8 +1041,7 @@ Jawaban yang tepat adalah opsi ${correctKey} (3.080 cm³).`;
       // -------------------------------------------------------------
       // MATEMATIKA JENJANG SMA / SMK (FASE E & F)
       // -------------------------------------------------------------
-      const smaSubTopics = ['sma_fungsi_kuadrat', 'sma_trigonometri', 'sma_deret', 'sma_logaritma', 'sma_turunan', 'sma_matriks'];
-      const chosen = smaSubTopics[idx % smaSubTopics.length];
+      const chosen = resolveExactSubTopic('matematika', topikCapaian, false, false, idx);
 
       if (chosen === 'sma_fungsi_kuadrat') {
         svgType = 'math_function_graph';
@@ -1003,27 +1132,49 @@ Jawaban yang benar adalah opsi ${correctKey}.`;
 
       } else {
         svgType = 'math_geometry_triangle';
-        correctKey = isFaseABCD ? 'A' : 'A';
-        stimulus = `Perhatikan segitiga siku-siku ABC pada gambar di atas dengan panjang sisi alas AB = 12 cm dan tinggi BC = 5 cm serta sudut lancip α di A.`;
-        butirSoal = `Tentukan panjang sisi miring AC dan nilai dari (sin α + cos α)!`;
+        if (idx % 2 === 1) {
+          correctKey = isFaseABCD ? 'B' : 'B';
+          stimulus = `Seorang siswa berdiri pada jarak mendatar 40 meter dari kaki tiang bendera sekolah. Dengan menggunakan klinometer, ia mengamati puncak tiang bendera dengan sudut elevasi 30°. Tinggi mata siswa dari permukaan tanah adalah 1,6 meter. Diketahui tan 30° ≈ 0,577 dan √3 ≈ 1,732.`;
+          butirSoal = `Berapakah tinggi tiang bendera sekolah tersebut dari permukaan tanah (dalam satuan meter)?`;
+          const numericOptions = [
+            { key: 'A', text: '22,4 meter' },
+            { key: 'B', text: '24,7 meter' },
+            { key: 'C', text: '26,5 meter' },
+            { key: 'D', text: '28,0 meter' },
+            { key: 'E', text: '30,2 meter' }
+          ];
+          options = optionLetters.map(letter => numericOptions.find(o => o.key === letter) || { key: letter, text: '24,7 meter' });
+          scoringGuide = `Pedoman Penskoran:
+1. Hubungan trigonometri: tan 30° = h_segitiga / 40 => h_segitiga = 40 × tan 30° = 40 × 0,577 = 23,08 m (Skor 2)
+2. Tinggi total tiang = h_segitiga + tinggi mata = 23,08 + 1,60 = 24,68 ≈ 24,7 meter (Skor 2)`;
+          explanation = `Langkah Perhitungan:
+• tan 30° = tinggi_puncak_mata / jarak_mendatar
+• h_segitiga = 40 m × 0,577 = 23,08 m
+• Tinggi tiang total = 23,08 m + 1,60 m = 24,68 m ≈ 24,7 meter.
+Jawaban yang tepat adalah opsi ${correctKey} (24,7 meter).`;
+        } else {
+          correctKey = isFaseABCD ? 'A' : 'A';
+          stimulus = `Perhatikan segitiga siku-siku ABC pada gambar di atas dengan panjang sisi alas AB = 12 cm dan tinggi BC = 5 cm serta sudut lancip α di A.`;
+          butirSoal = `Tentukan panjang sisi miring AC dan nilai dari (sin α + cos α)!`;
 
-        const numericOptions = [
-          { key: 'A', text: 'AC = 13 cm dan 17/13' },
-          { key: 'B', text: 'AC = 13 cm dan 12/13' },
-          { key: 'C', text: 'AC = 15 cm dan 17/15' },
-          { key: 'D', text: 'AC = 13 cm dan 7/13' },
-          { key: 'E', text: 'AC = 17 cm dan 15/17' }
-        ];
-        options = optionLetters.map(letter => numericOptions.find(o => o.key === letter) || { key: letter, text: '17/13' });
+          const numericOptions = [
+            { key: 'A', text: 'AC = 13 cm dan 17/13' },
+            { key: 'B', text: 'AC = 13 cm dan 12/13' },
+            { key: 'C', text: 'AC = 15 cm dan 17/15' },
+            { key: 'D', text: 'AC = 13 cm dan 7/13' },
+            { key: 'E', text: 'AC = 17 cm dan 15/17' }
+          ];
+          options = optionLetters.map(letter => numericOptions.find(o => o.key === letter) || { key: letter, text: '17/13' });
 
-        scoringGuide = `Pedoman Penskoran:
+          scoringGuide = `Pedoman Penskoran:
 1. Teorema Pythagoras: AC = √(12² + 5²) = 13 cm (Skor 2)
 2. sin α = 5/13, cos α = 12/13 => sin α + cos α = 17/13 (Skor 2)`;
 
-        explanation = `Langkah Perhitungan:
+          explanation = `Langkah Perhitungan:
 AC = √(12² + 5²) = 13 cm. sin α = 5/13, cos α = 12/13.
 sin α + cos α = 5/13 + 12/13 = 17/13.
 Jawaban yang tepat adalah opsi ${correctKey}.`;
+        }
       }
     }
 
@@ -1031,8 +1182,7 @@ Jawaban yang tepat adalah opsi ${correctKey}.`;
   // 2. MATA PELAJARAN FISIKA
   // =========================================================================
   } else if (subjectCategory === 'fisika') {
-    const physicsTopics = ['dinamika_gaya', 'rangkaian_listrik', 'kinematika_vt', 'usaha_energi'];
-    const chosen = physicsTopics[idx % physicsTopics.length];
+    const chosen = resolveExactSubTopic('fisika', topikCapaian, false, false, idx);
 
     if (chosen === 'dinamika_gaya') {
       svgType = 'physics_fbd';
@@ -1144,8 +1294,7 @@ Jawaban yang tepat adalah opsi ${correctKey} (300 Joule).`;
   // 3. MATA PELAJARAN KIMIA
   // =========================================================================
   } else if (subjectCategory === 'kimia') {
-    const chemTopics = ['titrasi_asam_basa', 'termokimia_entalpi', 'stoikiometri_reaksi', 'elektrokimia_volta'];
-    const chosen = chemTopics[idx % chemTopics.length];
+    const chosen = resolveExactSubTopic('kimia', topikCapaian, false, false, idx);
 
     if (chosen === 'titrasi_asam_basa') {
       svgType = 'chemistry_titration';
@@ -1261,8 +1410,7 @@ Jawaban yang tepat adalah opsi ${correctKey}.`;
   // 4. MATA PELAJARAN INFORMATIKA / KODING / KECERDASAN ARTIFISIAL
   // =========================================================================
   } else if (subjectCategory === 'informatika') {
-    const csTopics = ['cs_subnetting', 'cs_biner', 'cs_boolean', 'cs_kompleksitas', 'cs_ai_metrik'];
-    const chosen = csTopics[idx % csTopics.length];
+    const chosen = resolveExactSubTopic('informatika', topikCapaian, false, false, idx);
 
     if (chosen === 'cs_subnetting') {
       svgType = 'cs_subnet_binary';
@@ -1382,8 +1530,7 @@ Jawaban yang tepat adalah opsi ${correctKey}.`;
   // 5. MATA PELAJARAN EKONOMI / AKUNTANSI
   // =========================================================================
   } else if (subjectCategory === 'ekonomi') {
-    const econTopics = ['econ_keseimbangan', 'econ_bep', 'econ_elastisitas'];
-    const chosen = econTopics[idx % econTopics.length];
+    const chosen = resolveExactSubTopic('ekonomi', topikCapaian, false, false, idx);
 
     if (chosen === 'econ_keseimbangan') {
       svgType = 'econ_market_curve';
@@ -1471,8 +1618,7 @@ Jawaban yang tepat adalah opsi ${correctKey}.`;
   // 6. MATA PELAJARAN BIOLOGI / IPA (SAINS HAYATI)
   // =========================================================================
   } else if (subjectCategory === 'biologi') {
-    const bioTopics = ['bio_mendel', 'bio_energi'];
-    const chosen = bioTopics[idx % bioTopics.length];
+    const chosen = resolveExactSubTopic('biologi', topikCapaian, false, false, idx);
 
     if (chosen === 'bio_mendel') {
       svgType = 'bio_mendel_punnett';

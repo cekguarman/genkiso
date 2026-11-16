@@ -61,6 +61,14 @@ export default function TabKartuSoal({ examConfig, questions }) {
                   </tr>
                   <tr>
                     <td className="border border-slate-300 dark:border-slate-700 p-2 font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                      Tujuan Pembelajaran (TP)
+                    </td>
+                    <td className="border border-slate-300 dark:border-slate-700 p-2 font-medium text-slate-800 dark:text-slate-200">
+                      {q.tujuanPembelajaran || '-'}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-300 dark:border-slate-700 p-2 font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
                       Materi Pokok
                     </td>
                     <td className="border border-slate-300 dark:border-slate-700 p-2 font-semibold text-slate-900 dark:text-white">

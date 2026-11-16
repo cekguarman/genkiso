@@ -5,7 +5,7 @@ import {
   isQuantitativeSubject,
   generateExactScienceSvg, 
   generateExactScienceQuestion 
-} from './exactScienceGenerator';
+} from './exactScienceGenerator.js';
 
 export const generateSvgIllustration = (type, title = 'Ilustrasi Soal') => {
   // Cek apakah jenis SVG termasuk kategori sains/matematika eksak
@@ -120,9 +120,238 @@ export const generateSvgIllustration = (type, title = 'Ilustrasi Soal') => {
 };
 
 /**
- * Helper Generator Soal Multilingual Terstruktur
- * Mendukung Bahasa Indonesia, Bahasa Inggris (Full English), Bahasa Arab (اللغة العربية),
- * Bahasa Prancis (Français), dan Bahasa Palembang (Baso Pelembang - Kearifan Lokal Sumsel)
+ * Deteksi Domain Mata Pelajaran Kualitatif
+ * Membedakan bahasa, kewarganegaraan, sosial-humaniora, agama, seni, olahraga, dan komputasi
+ */
+export const detectQualitativeDomain = (mapel = '', topik = '') => {
+  const combined = `${mapel} ${topik}`.toLowerCase();
+
+  if (
+    combined.includes('indonesia') ||
+    combined.includes('inggris') ||
+    combined.includes('english') ||
+    combined.includes('bahasa') ||
+    combined.includes('sastra') ||
+    combined.includes('teks') ||
+    combined.includes('literasi baca')
+  ) {
+    return 'bahasa';
+  }
+
+  if (
+    combined.includes('pancasila') ||
+    combined.includes('ppkn') ||
+    combined.includes('kewarganegaraan') ||
+    combined.includes('hukum') ||
+    combined.includes('konstitusi') ||
+    combined.includes('uud') ||
+    combined.includes('hak asasi') ||
+    combined.includes('ham') ||
+    combined.includes('norma')
+  ) {
+    return 'pancasila';
+  }
+
+  if (
+    combined.includes('sejarah') ||
+    combined.includes('sosiologi') ||
+    combined.includes('antropologi') ||
+    combined.includes('sosial') ||
+    combined.includes('peradaban')
+  ) {
+    return 'sosial';
+  }
+
+  if (
+    combined.includes('agama') ||
+    combined.includes('islam') ||
+    combined.includes('kristen') ||
+    combined.includes('katolik') ||
+    combined.includes('hindu') ||
+    combined.includes('buddha') ||
+    combined.includes('budi pekerti') ||
+    combined.includes('akhlak') ||
+    combined.includes('fiqih') ||
+    combined.includes('akidah')
+  ) {
+    return 'agama';
+  }
+
+  if (
+    combined.includes('seni') ||
+    combined.includes('musik') ||
+    combined.includes('rupa') ||
+    combined.includes('tari') ||
+    combined.includes('teater') ||
+    combined.includes('prakarya') ||
+    combined.includes('estetika')
+  ) {
+    return 'seni';
+  }
+
+  if (
+    combined.includes('pjok') ||
+    combined.includes('olahraga') ||
+    combined.includes('penjas') ||
+    combined.includes('kebugaran') ||
+    combined.includes('jasmani') ||
+    combined.includes('senam') ||
+    combined.includes('kesehatan')
+  ) {
+    return 'pjok';
+  }
+
+  if (
+    combined.includes('informatika') ||
+    combined.includes('komputasi') ||
+    combined.includes('koding') ||
+    combined.includes('algoritma') ||
+    combined.includes('komputer') ||
+    combined.includes('kecerdasan artifisial') ||
+    combined.includes('ai')
+  ) {
+    return 'informatika';
+  }
+
+  return 'umum';
+};
+
+/**
+ * Menghitung Distribusi Level Kognitif Bloom (C1-C6) Berdasarkan Input Persis Pengguna di Langkah 2
+ */
+export const calculateBloomDistribution = (bloomConfig, totalQuestions) => {
+  const levels = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
+  const pool = [];
+
+  levels.forEach(lvl => {
+    const count = Math.max(0, parseInt(bloomConfig?.[lvl]) || 0);
+    const code = lvl.toUpperCase();
+    for (let i = 0; i < count; i++) {
+      pool.push(code);
+    }
+  });
+
+  if (pool.length === 0) {
+    const defaultLevels = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'];
+    for (let i = 0; i < totalQuestions; i++) {
+      pool.push(defaultLevels[i % defaultLevels.length]);
+    }
+    return pool;
+  }
+
+  if (pool.length === totalQuestions) {
+    return pool;
+  }
+
+  if (pool.length > totalQuestions) {
+    return pool.slice(0, totalQuestions);
+  }
+
+  // Jika pool kurang dari totalQuestions, ulang siklus proporsional
+  const result = [...pool];
+  let i = 0;
+  while (result.length < totalQuestions) {
+    result.push(pool[i % pool.length]);
+    i++;
+  }
+  return result;
+};
+
+/**
+ * Menghitung Distribusi Tingkat Kesukaran (Mudah, Sedang, Sulit) Berdasarkan Input Persentase Pengguna di Langkah 2
+ */
+export const calculateDifficultyDistribution = (difficultyConfig, totalQuestions, bloomList = []) => {
+  const mudahPct = Number(difficultyConfig?.mudah) ?? 30;
+  const sedangPct = Number(difficultyConfig?.sedang) ?? 50;
+  const sulitPct = Number(difficultyConfig?.sulit) ?? 20;
+  const totalPct = mudahPct + sedangPct + sulitPct || 100;
+
+  let countMudah = Math.round((mudahPct / totalPct) * totalQuestions);
+  let countSedang = Math.round((sedangPct / totalPct) * totalQuestions);
+  let countSulit = totalQuestions - (countMudah + countSedang);
+
+  if (countSulit < 0) {
+    countSedang = Math.max(0, countSedang + countSulit);
+    countSulit = 0;
+  }
+
+  const difficulties = new Array(totalQuestions).fill(null);
+  let remMudah = countMudah;
+  let remSedang = countSedang;
+  let remSulit = countSulit;
+
+  // Prioritaskan korelasi pedagogis: C1/C2 -> Mudah, C5/C6 -> Sulit, C3/C4 -> Sedang
+  for (let i = 0; i < totalQuestions; i++) {
+    const b = bloomList[i] || 'C3';
+    if ((b === 'C1' || b === 'C2') && remMudah > 0) {
+      difficulties[i] = 'Mudah';
+      remMudah--;
+    } else if ((b === 'C5' || b === 'C6') && remSulit > 0) {
+      difficulties[i] = 'Sulit';
+      remSulit--;
+    } else if ((b === 'C3' || b === 'C4') && remSedang > 0) {
+      difficulties[i] = 'Sedang';
+      remSedang--;
+    }
+  }
+
+  // Isi sisa slot agar total jumlah Mudah, Sedang, Sulit persis sesuai kalkulasi persentase pengguna
+  for (let i = 0; i < totalQuestions; i++) {
+    if (!difficulties[i]) {
+      if (remSedang > 0) {
+        difficulties[i] = 'Sedang';
+        remSedang--;
+      } else if (remMudah > 0) {
+        difficulties[i] = 'Mudah';
+        remMudah--;
+      } else if (remSulit > 0) {
+        difficulties[i] = 'Sulit';
+        remSulit--;
+      } else {
+        difficulties[i] = 'Sedang';
+      }
+    }
+  }
+
+  return difficulties;
+};
+
+/**
+ * Pembuat Rumusan Indikator Soal Resmi Kurikulum Merdeka (KKO ABCD Terstandar)
+ */
+export const generatePedagogicalIndicator = ({
+  topikCapaian,
+  assignedBloom,
+  assignedTP,
+  assignedElement,
+  hasVisual,
+  isQuant
+}) => {
+  const stimulusPrefix = hasVisual
+    ? `Disajikan diagram/ilustrasi data terukur tentang materi ${topikCapaian},`
+    : `Disajikan studi kasus kontekstual terkait topik ${topikCapaian},`;
+
+  const kkoMap = {
+    C1: 'peserta didik dapat mengidentifikasi fakta kunci dan istilah mendasar',
+    C2: 'peserta didik dapat menjelaskan serta menginterpretasikan konsep esensial',
+    C3: isQuant
+      ? 'peserta didik dapat menerapkan rumus terstandar untuk menghitung besaran kuantitatif yang tepat'
+      : 'peserta didik dapat menerapkan prinsip materi dalam menyelesaikan persoalan nyata secara tepat',
+    C4: 'peserta didik dapat menganalisis dan menelaah hubungan sebab-akibat keterkaitan fenomena',
+    C5: 'peserta didik dapat mengevaluasi dan menilai efektivitas serta keabsahan solusi secara kritis',
+    C6: 'peserta didik dapat merancang dan merumuskan rekomendasi strategi pemecahan masalah inovatif'
+  };
+
+  const kko = kkoMap[assignedBloom] || kkoMap.C3;
+  const tpSnippet = assignedTP ? ` yang selaras dengan capaian tujuan pembelajaran: "${assignedTP}"` : '';
+  const elementSnippet = assignedElement ? ` dengan mengintegrasikan nilai karakter "${assignedElement}".` : ' secara akurat dan tepat.';
+
+  return `${stimulusPrefix} ${kko}${tpSnippet}${elementSnippet}`;
+};
+
+/**
+ * Generator Soal Pedagogis Multilingual Otentik Sesuai Domain Mata Pelajaran
+ * Menghilangkan bias jargon informatika pada mata pelajaran non-informatika
  */
 const generateLocalizedQuestion = ({
   item,
@@ -132,11 +361,14 @@ const generateLocalizedQuestion = ({
   topikCapaian,
   assignedElement,
   assignedBloom,
+  assignedTP,
+  customInstruction = '',
   isFaseABCD,
   optionLetters,
   defaultCorrectKey,
   defaultCorrectKeys
 }) => {
+  const domain = detectQualitativeDomain(actualMapel, topikCapaian);
   let stimulus = '';
   let butirSoal = '';
   let options = [];
@@ -145,74 +377,197 @@ const generateLocalizedQuestion = ({
   let scoringGuide = '';
   let explanation = '';
 
+  const noteCustom = customInstruction && customInstruction.trim() !== ''
+    ? ` (Catatan Fokus: ${customInstruction.trim()})`
+    : '';
+
+  // -------------------------------------------------------------------------
+  // 1. BAHASA INGGRIS (Full English)
+  // -------------------------------------------------------------------------
   if (itemLang === 'en') {
-    stimulus = `In the context of ${actualMapel} learning regarding "${topikCapaian}", students are guided to observe contextual everyday phenomena related to the integration of "${assignedElement}".`;
-    if (item.type === 'pg_ad' || item.type === 'pg_ae') {
-      butirSoal = `Based on a critical examination of ${topikCapaian} and the conceptual diagram above, which of the following statements most accurately reflects the application of principles that integrate "${assignedElement}"?`;
-      const distractors = [
-        `Disregarding problem decomposition and jumping into intuitive conclusions without structured data validation.`,
-        `Omitting abstraction stages under the pretext of expediting real-time decision-making.`,
-        `Focusing exclusively on short-term convenience without considering long-term algorithmic scalability.`,
-        `Applying random procedures without rigorous test-case verification against complexity constraints.`,
-        `Outsourcing the entire solution formulation without verifying logic integrity.`
-      ];
-      options = optionLetters.map((letter, optIdx) => {
-        if (letter === correctKey) {
+    if (domain === 'bahasa') {
+      stimulus = `In reading comprehension and literary analysis of ${actualMapel} regarding "${topikCapaian}", students evaluate authentic text structures, cohesion, and context${noteCustom}.`;
+      if (item.type === 'pg_ad' || item.type === 'pg_ae') {
+        butirSoal = `Based on a critical examination of the text regarding "${topikCapaian}", which of the following statements most effectively synthesizes the central idea while reflecting "${assignedElement}"?`;
+        const distractors = [
+          `Focusing purely on isolated literal words while ignoring rhetorical purpose and communicative context.`,
+          `Drawing subjective assumptions that contradict empirical evidence presented in the text.`,
+          `Overlooking transitional connectors and misinterpreting causal relationships within paragraphs.`,
+          `Substituting authentic arguments with unsubstantiated emotional assertions.`,
+          `Disregarding structural unity and paragraph coherence in the thematic conclusion.`
+        ];
+        options = optionLetters.map((letter, optIdx) => {
+          if (letter === correctKey) {
+            return {
+              key: letter,
+              text: `Critically interpret paragraph cohesion and evaluate contextual evidence in accordance with ${actualMapel} standards and the value of "${assignedElement}".`
+            };
+          }
+          return { key: letter, text: distractors[optIdx % distractors.length] };
+        });
+        scoringGuide = `Score 1 for selecting the correct answer (${correctKey}), 0 otherwise.`;
+        explanation = `Option ${correctKey} is correct because it exemplifies valid textual interpretation integrated with ${assignedElement}.`;
+      } else if (item.type === 'benar_salah') {
+        correctKey = idx % 2 === 0 ? 'True' : 'False';
+        butirSoal = `Statement: "An effective analytical reading in ${actualMapel} requires solely memorizing terminology without examining paragraph coherence or reflecting ${assignedElement}." \n\nWhat is the truth value of this statement?`;
+        options = [
+          { key: 'True', text: 'The statement is TRUE' },
+          { key: 'False', text: 'The statement is FALSE' }
+        ];
+        scoringGuide = `Score 1 for choosing "${correctKey}", 0 otherwise.`;
+        explanation = `The statement is FALSE because deep textual mastery requires analyzing rhetorical structures and contextual ethics.`;
+      } else if (item.type.includes('kompleks')) {
+        butirSoal = `Examine the following propositions regarding effective analysis in ${topikCapaian}. Select ALL statements that are scientifically VALID and embody "${assignedElement}":`;
+        const cDist = [
+          `Sacrifices grammatical clarity to expedite writing.`,
+          `Ignores textual context in favor of personal bias.`,
+          `Disregards logical transitions between key paragraphs.`
+        ];
+        options = optionLetters.map((letter, optIdx) => {
+          const isCorrect = correctKeys.includes(letter);
           return {
             key: letter,
-            text: `Systematically analyze problem parameters and formulate structured solutions aligned with ${assignedElement} and core ${actualMapel} standards.`
+            text: isCorrect
+              ? `Statement ${letter}: Integrates accurate analytical reasoning and upholds ethical communication embodying "${assignedElement}".`
+              : `Statement ${letter}: ${cDist[optIdx % cDist.length]}`
           };
-        }
-        return {
-          key: letter,
-          text: distractors[optIdx % distractors.length]
-        };
-      });
-      scoringGuide = `Score 1 for selecting the correct answer (${correctKey}), score 0 for incorrect or blank answers.`;
-      explanation = `Option ${correctKey} is correct because it demonstrates comprehensive mastery of ${topikCapaian} harmoniously coupled with ${assignedElement}.`;
-    } else if (item.type === 'benar_salah') {
-      correctKey = idx % 2 === 0 ? 'True' : 'False';
-      butirSoal = `Statement: "The practical implementation of ${topikCapaian} requires solely technical efficiency, rendering ethical considerations and commitment to ${assignedElement} unnecessary." \n\nWhat is the truth value of this statement?`;
-      options = [
-        { key: 'True', text: 'The statement is TRUE' },
-        { key: 'False', text: 'The statement is FALSE' }
-      ];
-      scoringGuide = `Score 1 for choosing "${correctKey}", score 0 otherwise.`;
-      explanation = `The statement is FALSE because sound implementation of ${actualMapel} always demands moral responsibility, social ethics, and adherence to ${assignedElement}.`;
-    } else if (item.type.includes('kompleks')) {
-      butirSoal = `Consider the following strategic conclusions regarding problem-solving in ${topikCapaian}. Select ALL statements that are scientifically VALID and uphold the principle of "${assignedElement}":`;
-      const complexDistractors = [
-        `Disregards quality control protocols to hasten field resolution.`,
-        `Skips data verification to cut computational overhead.`,
-        `Conceals algorithmic transparency from key stakeholders.`
-      ];
-      options = optionLetters.map((letter, optIdx) => {
-        const isCorrect = correctKeys.includes(letter);
-        return {
-          key: letter,
-          text: isCorrect
-            ? `Statement ${letter}: Integrates adaptive ${actualMapel} methodologies while championing ${assignedElement} for collective advancement.`
-            : `Statement ${letter}: ${complexDistractors[optIdx % complexDistractors.length]}`
-        };
-      });
-      scoringGuide = `Full score (2): Accurately identifying (${correctKeys.join(', ')}). Partial score (1): Selecting 1 correct option without false selections. Score 0: Selecting incorrect option.`;
-      explanation = `The correct combination is (${correctKeys.join(', ')}). These statements unite algorithmic exactness with ethical integrity.`;
+        });
+        scoringGuide = `Full score (2): Correctly selecting (${correctKeys.join(', ')}). Partial score (1): Selecting 1 correct answer without errors.`;
+        explanation = `The correct keys are (${correctKeys.join(', ')}), demonstrating sound textual argumentation.`;
+      } else {
+        correctKey = 'Scoring Rubric';
+        butirSoal = `Write a comprehensive analytical essay addressing key concepts in "${topikCapaian}"! Your response must elucidate: \n1. Core thematic analysis,\n2. Structural evidence grounded in ${actualMapel} principles,\n3. Concrete reflection demonstrating "${assignedElement}".`;
+        scoringGuide = `• Score 4: Thorough analysis, clear logical flow, and exemplary character reflection.\n• Score 3: Good analysis with moderate reflection.\n• Score 2: Basic overview of 1-2 points.\n• Score 1: Incomplete.`;
+        explanation = `Assesses cognitive level ${assignedBloom} through synthesis, textual critique, and ethical awareness.`;
+      }
+
+    } else if (domain === 'pancasila') {
+      stimulus = `In the study of Civic Education and Constitutional Law regarding "${topikCapaian}", citizens are challenged to uphold democratic deliberation, fundamental rights, and national unity${noteCustom}.`;
+      if (item.type === 'pg_ad' || item.type === 'pg_ae') {
+        butirSoal = `In light of community challenges related to "${topikCapaian}", which of the following actions best embodies the civic virtue of "${assignedElement}"?`;
+        const distractors = [
+          `Imposing unilateral decisions that violate established constitutional procedures.`,
+          `Prioritizing personal or group interests over communal consensus and equity.`,
+          `Disregarding legal norms and institutional accountability under the pretext of urgency.`,
+          `Marginalizing minority perspectives during deliberations and public decision-making.`,
+          `Rejecting open dialogue and fostering sectarian sentiment within diverse communities.`
+        ];
+        options = optionLetters.map((letter, optIdx) => {
+          if (letter === correctKey) {
+            return {
+              key: letter,
+              text: `Promote inclusive deliberation, adhere to rule of law, and strengthen social solidarity in harmony with "${assignedElement}".`
+            };
+          }
+          return { key: letter, text: distractors[optIdx % distractors.length] };
+        });
+        scoringGuide = `Score 1 for selecting (${correctKey}), 0 otherwise.`;
+        explanation = `Option ${correctKey} is correct because constitutional democracy demands mutual respect and justice.`;
+      } else if (item.type === 'benar_salah') {
+        correctKey = idx % 2 === 0 ? 'True' : 'False';
+        butirSoal = `Statement: "Implementing civic solutions in ${topikCapaian} justifies bypassing legal safeguards and moral accountability in order to achieve immediate results." \n\nWhat is the truth value of this statement?`;
+        options = [
+          { key: 'True', text: 'The statement is TRUE' },
+          { key: 'False', text: 'The statement is FALSE' }
+        ];
+        scoringGuide = `Score 1 for choosing "${correctKey}", 0 otherwise.`;
+        explanation = `The statement is FALSE because democratic processes strictly require adherence to constitutionality and justice.`;
+      } else if (item.type.includes('kompleks')) {
+        butirSoal = `Consider the following civic measures for resolving community problems in ${topikCapaian}. Select ALL statements that are CONSTITUTIONALLY VALID and champion "${assignedElement}":`;
+        const cDist = [
+          `Suppresses public transparency to avoid public scrutiny.`,
+          `Enforces arbitrary policies without legal grounding.`,
+          `Excludes civil society participation from policy assessment.`
+        ];
+        options = optionLetters.map((letter, optIdx) => {
+          const isCorrect = correctKeys.includes(letter);
+          return {
+            key: letter,
+            text: isCorrect
+              ? `Statement ${letter}: Fosters consensual deliberation and equitable justice that reflect "${assignedElement}".`
+              : `Statement ${letter}: ${cDist[optIdx % cDist.length]}`
+          };
+        });
+        scoringGuide = `Full score (2): Accurately identifying (${correctKeys.join(', ')}). Score 0: Any incorrect choice.`;
+        explanation = `The correct keys are (${correctKeys.join(', ')}), demonstrating adherence to constitutional governance.`;
+      } else {
+        correctKey = 'Scoring Rubric';
+        butirSoal = `Elaborate a structured civic resolution plan for challenges in "${topikCapaian}"! Detail: \n1. Legal and constitutional basis,\n2. Step-by-step participatory deliberation,\n3. Concrete reflection of "${assignedElement}".`;
+        scoringGuide = `• Score 4: Comprehensive legal analysis, democratic steps, and mature civic reflection.\n• Score 3: Adequate civic framework.\n• Score 2: Superficial response.\n• Score 1: Inadequate.`;
+        explanation = `Measures cognitive level ${assignedBloom} via constitutional reasoning and social synthesis.`;
+      }
+
     } else {
-      correctKey = 'Scoring Rubric';
-      butirSoal = `Provide a comprehensive strategic plan to resolve computational challenges within ${topikCapaian}! In your analysis, elucidate at least: \n1. Root cause diagnosis,\n2. Systematic multi-phase methodology grounded in ${actualMapel} principles,\n3. Concrete evidence manifesting the character value of "${assignedElement}" within your proposed solution.`;
-      scoringGuide = `• Score 4 (Excellent): All 3 facets analyzed with sharp logic and exemplary character integration.\n• Score 3 (Good): All 3 facets addressed with moderate character depth.\n• Score 2 (Fair): Only 1-2 facets answered generally.\n• Score 1 (Needs Improvement): Incomplete and lacks core subject matter.`;
-      explanation = `Students are assessed on their ability to exhibit cognitive level ${assignedBloom} through structured analytical reasoning and innovative synthesis.`;
+      // Default / Informatika Teori / Umum English
+      stimulus = `In learning ${actualMapel} regarding "${topikCapaian}", students analyze structured contextual problem solving integrating "${assignedElement}"${noteCustom}.`;
+      if (item.type === 'pg_ad' || item.type === 'pg_ae') {
+        butirSoal = `Based on an analytical review of "${topikCapaian}", which of the following approaches best demonstrates the core competencies aligned with "${assignedElement}"?`;
+        const distractors = [
+          `Jumping into hasty conclusions without structured validation of underlying parameters.`,
+          `Omitting critical analytical stages under the pretext of expediting decision-making.`,
+          `Focusing purely on short-term ease without assessing sustainable system-wide impact.`,
+          `Applying random heuristics without verifying constraints against official standards.`,
+          `Delegating entire problem formulation without auditing validity or factual integrity.`
+        ];
+        options = optionLetters.map((letter, optIdx) => {
+          if (letter === correctKey) {
+            return {
+              key: letter,
+              text: `Systematically analyze core parameters and formulate structured solutions that honor ${actualMapel} principles and the character pillar of "${assignedElement}".`
+            };
+          }
+          return { key: letter, text: distractors[optIdx % distractors.length] };
+        });
+        scoringGuide = `Score 1 for selecting (${correctKey}), 0 otherwise.`;
+        explanation = `Option ${correctKey} correctly demonstrates disciplined analytical reasoning and ethical integrity.`;
+      } else if (item.type === 'benar_salah') {
+        correctKey = idx % 2 === 0 ? 'True' : 'False';
+        butirSoal = `Statement: "Practical mastery of ${topikCapaian} requires solely mechanical execution, rendering ethical responsibility and ${assignedElement} irrelevant." \n\nWhat is the truth value of this statement?`;
+        options = [
+          { key: 'True', text: 'The statement is TRUE' },
+          { key: 'False', text: 'The statement is FALSE' }
+        ];
+        scoringGuide = `Score 1 for choosing "${correctKey}", 0 otherwise.`;
+        explanation = `The statement is FALSE because authentic mastery always demands moral responsibility and reflective integrity.`;
+      } else if (item.type.includes('kompleks')) {
+        butirSoal = `Review the strategic conclusions regarding ${topikCapaian}. Select ALL statements that are scientifically VALID and uphold "${assignedElement}":`;
+        const cDist = [
+          `Disregards quality validation to cut turnaround time.`,
+          `Conceals methodology from key stakeholders.`,
+          `Bypasses verification of core operational requirements.`
+        ];
+        options = optionLetters.map((letter, optIdx) => {
+          const isCorrect = correctKeys.includes(letter);
+          return {
+            key: letter,
+            text: isCorrect
+              ? `Statement ${letter}: Implements sound ${actualMapel} methodologies while championing "${assignedElement}" for shared welfare.`
+              : `Statement ${letter}: ${cDist[optIdx % cDist.length]}`
+          };
+        });
+        scoringGuide = `Full score (2): (${correctKeys.join(', ')}). Partial score (1): 1 correct without false.`;
+        explanation = `The correct choices are (${correctKeys.join(', ')}).`;
+      } else {
+        correctKey = 'Scoring Rubric';
+        butirSoal = `Formulate a comprehensive strategic plan to resolve challenges in "${topikCapaian}"! Detail: \n1. Root-cause analysis,\n2. Systematic resolution sequence,\n3. Concrete integration of "${assignedElement}".`;
+        scoringGuide = `• Score 4: Deep analysis, rigorous methodology, and insightful character integration.\n• Score 3: Satisfactory analysis.\n• Score 2: Partial treatment.\n• Score 1: Incomplete.`;
+        explanation = `Evaluates cognitive level ${assignedBloom} via high-order structured problem solving.`;
+      }
     }
+
+  // -------------------------------------------------------------------------
+  // 2. BAHASA ARAB (اللغة العربية الفصحى)
+  // -------------------------------------------------------------------------
   } else if (itemLang === 'ar') {
-    stimulus = `في سياق تدريس مادة ${actualMapel} حول موضوع "${topikCapaian}"، يُدعى المتعلمون إلى دراسة حالة سياقية واقعية ترتبط بترسيخ قيمة "${assignedElement}".`;
+    stimulus = `في سياق دراسة مادة ${actualMapel} حول موضوع "${topikCapaian}"، يُدعى المتعلمون إلى دراسة حالة سياقية واقعية ترتبط بترسيخ قيمة "${assignedElement}"${noteCustom}.`;
     if (item.type === 'pg_ad' || item.type === 'pg_ae') {
-      butirSoal = `بناءً على الفحص النقدي لموضوع ${topikCapaian} والمخطط التوضيحي أعلاه، أي من العبارات التالية تمثل التطبيق الأكثر دقة للمفاهيم المنسجمة مع قيمة "${assignedElement}"؟`;
+      butirSoal = `بناءً على الفحص النقدي لموضوع "${topikCapaian}"، أي من العبارات التالية تمثل التطبيق الأكثر دقة للمفاهيم المنسجمة مع قيمة "${assignedElement}"؟`;
       const distractors = [
-        `تجاهل تفكيك المشكلة والاعتماد على الاستنتاج العشوائي دون التحقق من البيانات.`,
-        `حذف مراحل التجريد بحجة تسريع اتخاذ القرار الميداني.`,
-        `التركيز على الحلول السطحية العاجلة دون مراعاة الكفاءة الخوارزمية طويلة الأمد.`,
-        `تطبيق خوارزميات غير مختبرة دون اختبار حالات الفحص المعيارية.`,
-        `تفويض بناء الحلول بالكامل لأطراف خارجية دون التحقق من منطق التعليمات البرمجية.`
+        `تجاهل تفكيك معطيات المسألة والاعتماد على الاستنتاج العشوائي دون التحقق من البيانات.`,
+        `إلغاء مراحل التحليل المنهجي بحجة تسريع اتخاذ القرار الميداني.`,
+        `التركيز على الحلول السطحية العاجلة دون مراعاة الكفاءة العلمية والاستدامة طويلة الأمد.`,
+        `تطبيق إجراءات غير مختبرة دون التحقق من مطابقتها للمعايير الأكاديمية والمهنية.`,
+        `تفويض بناء الحلول بالكامل لأطراف خارجية دون التحقق من صحة الأدلة والمنطق العلمي.`
       ];
       options = optionLetters.map((letter, optIdx) => {
         if (letter === correctKey) {
@@ -221,16 +576,13 @@ const generateLocalizedQuestion = ({
             text: `تحليل معطيات المشكلة بشكل منهجي واتخاذ قرارات حلول متوافقة مع مبادئ ${assignedElement} وقواعد ${actualMapel}.`
           };
         }
-        return {
-          key: letter,
-          text: distractors[optIdx % distractors.length]
-        };
+        return { key: letter, text: distractors[optIdx % distractors.length] };
       });
       scoringGuide = `درجة واحدة (1) عند الإجابة الصحيحة (${correctKey})، وصفر (0) عند الإجابة الخاطئة.`;
       explanation = `الخيار ${correctKey} هو الصحيح لأنه يعكس فهماً شاملاً لقواعد ${topikCapaian} المترابطة مع قيمة ${assignedElement}.`;
     } else if (item.type === 'benar_salah') {
       correctKey = idx % 2 === 0 ? 'صحيح' : 'خطأ';
-      butirSoal = `العبارة: "إن تطبيق مفاهيم ${topikCapaian} في الحياة العملية لا يتطلب مراعاة الضوابط الأخلاقية أو الاهتمام بـ ${assignedElement}، بل يكتفي بالتركيز على الكفاءة التقنية وحدها." \n\nما هو الحكم الصحيح على هذه العبارة؟`;
+      butirSoal = `العبارة: "إن تطبيق مفاهيم ${topikCapaian} في الحياة العملية لا يتطلب مراعاة الضوابط الأخلاقية أو الاهتمام بـ ${assignedElement}، بل يكتفي بالتركيز على الكفاءة الشكلية وحدها." \n\nما هو الحكم الصحيح على هذه العبارة؟`;
       options = [
         { key: 'صحيح', text: 'العبارة صحيحة (True)' },
         { key: 'خطأ', text: 'العبارة خاطئة (False)' }
@@ -240,16 +592,16 @@ const generateLocalizedQuestion = ({
     } else if (item.type.includes('kompleks')) {
       butirSoal = `تأمل البدائل والاستنتاجات التالية المتعلقة بمعالجة مشكلات ${topikCapaian}. حدد جميع العبارات الصحيحة علمياً والمعبرة عن ركيزة "${assignedElement}":`;
       const complexDistractors = [
-        `إلغاء بروتوكولات ضبط الجودة لتقليل وقت الإنجاز.`,
-        `تجاوز مرحلة التحقق من منطق البيانات لتقليل تكاليف المعالجة.`,
-        `حجب شفافية المعلومات الخوارزمية عن المستخدمين المعنيين.`
+        `إلغاء بروتوكولات ضبط الجودة لتقليل وقت الإنجاز الميداني.`,
+        `تجاوز مرحلة التحقق من منطق البيانات لتقليل نفقات المتابعة.`,
+        `حجب شفافية المعلومات الأكاديمية عن الأطراف المعنية.`
       ];
       options = optionLetters.map((letter, optIdx) => {
         const isCorrect = correctKeys.includes(letter);
         return {
           key: letter,
           text: isCorrect
-            ? `العبارة ${letter}: دمج إجراءات ${actualMapel} المرنة مع الالتزام بركيزة ${assignedElement} لخدمة الصالح العام.`
+            ? `العبارة ${letter}: دمج إجراءات ${actualMapel} المنهجية مع الالتزام بركيزة ${assignedElement} لخدمة الصالح العام.`
             : `العبارة ${letter}: ${complexDistractors[optIdx % complexDistractors.length]}`
         };
       });
@@ -261,34 +613,35 @@ const generateLocalizedQuestion = ({
       scoringGuide = `• 4 درجات (ممتاز): تغطية المحاور الثلاثة بتحليل منطقي عميق وربط قيمي وثيق.\n• 3 درجات (جيد): تغطية المحاور مع ربط قيمي عام.\n• درجتان (مقبول): تغطية محور أو محورين فقط.\n• درجة واحدة (ضعيف): إجابة غير مكتملة.`;
       explanation = `يُقاس في هذا السؤال المستوى المعرفي ${assignedBloom} من خلال التفكير التحليلي والتوليد الإبداعي للحلول.`;
     }
+
+  // -------------------------------------------------------------------------
+  // 3. BAHASA PRANCIS (Langue Française)
+  // -------------------------------------------------------------------------
   } else if (itemLang === 'fr') {
-    stimulus = `Dans le cadre de l'apprentissage de ${actualMapel} sur le thème « ${topikCapaian} », les apprenants explorent des situations contextualisées liées à l'intégration de la valeur « ${assignedElement} ».`;
+    stimulus = `Dans le cadre de l'apprentissage de ${actualMapel} sur le thème « ${topikCapaian} », les apprenants explorent des situations contextualisées liées à l'intégration de la valeur « ${assignedElement} »${noteCustom}.`;
     if (item.type === 'pg_ad' || item.type === 'pg_ae') {
-      butirSoal = `D'après l'analyse méthodique de ${topikCapaian} et le diagramme ci-dessus, quelle affirmation illustre le mieux l'application rigoureuse intégrant la valeur « ${assignedElement} » ?`;
+      butirSoal = `D'après l'analyse méthodique de « ${topikCapaian} », quelle affirmation illustre le mieux l'application rigoureuse intégrant la valeur « ${assignedElement} » ?`;
       const distractors = [
-        `Ignorer la décomposition du problème et privilégier des intuitions non vérifiées.`,
-        `Supprimer les étapes d'abstraction pour accélérer la prise de décision sur le terrain.`,
-        `Se concentrer uniquement sur l'immédiateté sans tenir compte de la scalabilité algorithmique.`,
-        `Appliquer des démarches aléatoires sans tests préalables sur les jeux de données.`,
-        `Déléguer l'ensemble de la logique algorithmique sans validation interne.`
+        `Ignorer la décomposition analytique du problème et privilégier des intuitions non vérifiées.`,
+        `Supprimer les étapes d'évaluation conceptuelle pour accélérer la prise de décision sur le terrain.`,
+        `Se concentrer uniquement sur l'immédiateté sans tenir compte de la viabilité à long terme.`,
+        `Appliquer des démarches aléatoires sans tests préalables sur les données et contraintes.`,
+        `Déléguer l'ensemble de la logique sans validation interne des critères de rigueur.`
       ];
       options = optionLetters.map((letter, optIdx) => {
         if (letter === correctKey) {
           return {
             key: letter,
-            text: `Analyser systématiquement les paramètres du problème et formuler des solutions structurées conformes aux principes de ${assignedElement} et de ${actualMapel}.`
+            text: `Analyser méthodiquement les paramètres et formuler des solutions conformes aux principes de ${assignedElement} et de ${actualMapel}.`
           };
         }
-        return {
-          key: letter,
-          text: distractors[optIdx % distractors.length]
-        };
+        return { key: letter, text: distractors[optIdx % distractors.length] };
       });
       scoringGuide = `1 point pour la bonne réponse (${correctKey}), 0 point en cas d'erreur ou d'omission.`;
-      explanation = `L'option ${correctKey} est exacte car elle allie la maîtrise technique de ${topikCapaian} avec l'éthique de ${assignedElement}.`;
+      explanation = `L'option ${correctKey} est exacte car elle allie la maîtrise méthodique de ${topikCapaian} avec l'éthique de ${assignedElement}.`;
     } else if (item.type === 'benar_salah') {
       correctKey = idx % 2 === 0 ? 'Vrai' : 'Faux';
-      butirSoal = `Affirmation : « L'application concrète des concepts de ${topikCapaian} vise exclusivement l'efficacité technique, rendant superflue toute considération éthique relative à ${assignedElement}. » \n\nQuelle est la valeur de vérité de cette affirmation ?`;
+      butirSoal = `Affirmation : « L'application concrète des concepts de ${topikCapaian} vise exclusivement l'efficacité formelle, rendant superflue toute considération éthique relative à ${assignedElement}. » \n\nQuelle est la valeur de vérité de cette affirmation ?`;
       options = [
         { key: 'Vrai', text: 'L\'affirmation est VRAIE' },
         { key: 'Faux', text: 'L\'affirmation est FAUSSE' }
@@ -298,9 +651,9 @@ const generateLocalizedQuestion = ({
     } else if (item.type.includes('kompleks')) {
       butirSoal = `Examinez les propositions suivantes relatives à la résolution de problématiques dans ${topikCapaian}. Cochez TOUTES les affirmations valides intégrant le pilier « ${assignedElement} » :`;
       const complexDistractors = [
-        `Supprimer le contrôle qualité pour réduire les délais.`,
-        `Négliger la validation logique pour réduire les coûts de calcul.`,
-        `Restreindre la transparence des données aux usagers légitimes.`
+        `Supprimer le contrôle qualité pour réduire les délais d'exécution.`,
+        `Négliger la validation logique pour réduire les coûts opérationnels.`,
+        `Restreindre la transparence des critères aux usagers légitimes.`
       ];
       options = optionLetters.map((letter, optIdx) => {
         const isCorrect = correctKeys.includes(letter);
@@ -319,34 +672,35 @@ const generateLocalizedQuestion = ({
       scoringGuide = `• 4 pts (Excellent) : 3 dimensions traitées avec rigueur analytique et intégration éthique remarquable.\n• 3 pts (Bien) : 3 dimensions abordées de manière satisfaisante.\n• 2 pts (Moyen) : 1 à 2 dimensions partiellement traitées.\n• 1 pt (Insuffisant) : Réponse incomplète.`;
       explanation = `Évalue la mobilisation du niveau taxonomique ${assignedBloom} par la synthèse réflexive et l'argumentation critique.`;
     }
+
+  // -------------------------------------------------------------------------
+  // 4. BAHASA PALEMBANG (Baso Pelembang - Kearifan Lokal Sumatera Selatan)
+  // -------------------------------------------------------------------------
   } else if (itemLang === 'palembang') {
-    stimulus = `Kalu kito nyingok pelajarnyo ${actualMapel} bab "${topikCapaian}", kito pacak belajor dari masalah sehari-hari di kito Palembang yang ado sangkut pautnyo samo nerapke nilai "${assignedElement}".`;
+    stimulus = `Kalu kito nyingok pelajarnyo ${actualMapel} bab "${topikCapaian}", kito pacak belajor dari masalah sehari-hari di kito Palembang yang ado sangkut pautnyo samo nerapke budi pekerti "${assignedElement}"${noteCustom}.`;
     if (item.type === 'pg_ad' || item.type === 'pg_ae') {
-      butirSoal = `Berdasarke kajian materi ${topikCapaian} samo bagan di pucuk ini, mano pernyataan di bawah ini yang paling pas buat nunjukke penerapan konsep yang nerapke nilai "${assignedElement}"?`;
+      butirSoal = `Berdasarke kajian materi "${topikCapaian}", mano pernyataan di bawah ini yang paling pas buat nunjukke penerapan konsep yang nerapke nilai "${assignedElement}"?`;
       const distractors = [
         `Langsung bae nyimpulke secara instan tanpa dicek lagi datanyo bener apo idak.`,
-        `Ngurangi tahapan mikir abstraksi karno diraso bikin lamo ngambek keputusan di lapangan.`,
-        `Cuma mikirke gampangnyo bae sekarang tanpa mikirke efisiensi algoritma pas dipake jangka lamo.`,
-        `Make cara acak-acakan bae tanpa diuji pake kasus uji (test case) apo la pas samo batasan masalahnyo.`,
-        `Nyerahke galo-galo rumusan solusi ke wong laen tanpa diperikso lagi kebenaran logikanyo.`
+        `Ngurangi tahapan mikir teliti karno diraso bikin lamo ngambek keputusan di lapangan.`,
+        `Cuma mikirke gampangnyo bae sekarang tanpa mikirke dampak jangka lamo untuk wong banyak.`,
+        `Make cara acak-acakan bae tanpa diuji apo la pas samo aturan keilmuan yang bener.`,
+        `Nyerahke galo-galo rumusan gawean ke wong laen tanpa diperikso lagi kebenaran logikanyo.`
       ];
       options = optionLetters.map((letter, optIdx) => {
         if (letter === correctKey) {
           return {
             key: letter,
-            text: `Menganalisis parameter masalah caro sistematis laju ngambek keputusan solutif yang pas samo prinsip ${assignedElement} di ${actualMapel}.`
+            text: `Menganalisis masalah caro sistematis laju ngambek keputusan solutif yang pas samo prinsip ${assignedElement} di ${actualMapel}.`
           };
         }
-        return {
-          key: letter,
-          text: distractors[optIdx % distractors.length]
-        };
+        return { key: letter, text: distractors[optIdx % distractors.length] };
       });
       scoringGuide = `Skor 1 kalu jawab bener (${correctKey}), skor 0 kalu sala atau idak diisi.`;
       explanation = `Opsi ${correctKey} bener karno nunjukke pemahaman yang mantep bab konsep ${topikCapaian} yang tehubung elok samo budi pekerti ${assignedElement}.`;
     } else if (item.type === 'benar_salah') {
       correctKey = idx % 2 === 0 ? 'Bener' : 'Salah';
-      butirSoal = `Pernyataan: "Penerapan konsep ${topikCapaian} di dunio nyato idak usah mikirke etika apo lagi kepedulian samo ${assignedElement}, cukup mentingke gawenyo lancar bae." \n\nCakmano kebenaran pernyataan ini?`;
+      butirSoal = `Pernyataan: "Penerapan materi ${topikCapaian} di dunio nyato idak usah mikirke etika apo lagi kepedulian samo ${assignedElement}, cukup mentingke gawenyo lancar bae." \n\nCakmano kebenaran pernyataan ini?`;
       options = [
         { key: 'Bener', text: 'Pernyataan di pucuk BENER' },
         { key: 'Salah', text: 'Pernyataan di pucuk SALAH' }
@@ -358,7 +712,7 @@ const generateLocalizedQuestion = ({
       const complexDistractors = [
         `Ngabaike aturan kendali mutu karno diraso bikin lambat urusan di lapangan bae.`,
         `Ngilangi tahapan verifikasi data biar biayanyo pacak dipangkas semurah-murahnyo.`,
-        `Nutupi keterbukaan info algoritma dari kawan-kawan yang berkepentingan.`
+        `Nutupi keterbukaan info dari kawan-kawan yang berkepentingan.`
       ];
       options = optionLetters.map((letter, optIdx) => {
         const isCorrect = correctKeys.includes(letter);
@@ -370,71 +724,242 @@ const generateLocalizedQuestion = ({
         };
       });
       scoringGuide = `Skor Penuh (2): Pas galo milih (${correctKeys.join(', ')}). Skor Sebagian (1): Milih 1 opsi bener tanpa milih yang sala. Skor 0: Milih opsi sala.`;
-      explanation = `Pilihan yang bener yoitu (${correctKeys.join(', ')}). Pernyataan ini maduke ketepatan ilmu samo integritas karakter budi pekerti budak mudo.`;
+      explanation = `Pilihan yang bener yoitu (${correctKeys.join(', ')}). Pernyataan ini maduke ketepatan ilmu samo integritas budi pekerti.`;
     } else {
       correctKey = 'Pedoman Nilai (Rubrik)';
       butirSoal = `Jelaske caro komprehensif cakmano rancangan strategi kito buat mecahke masalah di materi ${topikCapaian}! Di jawaban adek-adek, jelaske paling idak: \n1. Analisis akar masalahnyo apo,\n2. Langkah-langkah nyelesaikannyo betahap make aturan ${actualMapel},\n3. Bukti nyato wujud budi pekerti "${assignedElement}" di solusi yang diajuke.`;
       scoringGuide = `• Skor 4 (Mantep Nian): Nguraike ketigo aspek nganalisis tajam, logis, samo refleksi karakter ${assignedElement} pas nian.\n• Skor 3 (Bagus): Nguraike ketigo aspek tapi integrasi karakter masi umum.\n• Skor 2 (Sedang): Cuma nguraike 1-2 aspek bae.\n• Skor 1 (Kurang): Jawaban masih cindo-cindoan bae belum nyentuh inti materi.`;
       explanation = `Peserta didik diarepke pacak nunjukke tingkat pikir kognitif ${assignedBloom} liwat penalaran yang rapi samo ide inovatif.`;
     }
+
+  // -------------------------------------------------------------------------
+  // 5. BAHASA INDONESIA (Default Resmi) - Terpetakan Spesifik per Domain Mapel
+  // -------------------------------------------------------------------------
   } else {
-    // Default: Bahasa Indonesia
-    stimulus = `Dalam konteks pembelajaran ${actualMapel} pada topik "${topikCapaian}", peserta didik diajak untuk mengamati fenomena kontekstual sehari-hari yang berkaitan dengan integrasi nilai "${assignedElement}".`;
-    if (item.type === 'pg_ad' || item.type === 'pg_ae') {
-      butirSoal = `Berdasarkan telaah kritis terhadap materi ${topikCapaian} dan bagan fenomena di atas, manakah pernyataan berikut yang paling tepat dalam menunjukkan penerapan konsep yang mengintegrasikan nilai "${assignedElement}"?`;
-      const distractorPool = [
-        `Mengabaikan dekomposisi masalah dan langsung mengambil kesimpulan intuitif tanpa verifikasi data terstruktur.`,
-        `Mengurangi tahapan analisis abstraksi karena dianggap memperlambat waktu pengambilan keputusan lapangan.`,
-        `Hanya memfokuskan solusi pada aspek kemudahan sesaat tanpa mempertimbangkan efisiensi algoritma jangka panjang.`,
-        `Menerapkan algoritma acak tanpa pengujian kasus uji (test case) terhadap batasan kompleksitas masalah.`,
-        `Menyerahkan seluruh perumusan solusi kepada pihak ketiga tanpa melakukan validasi kebenaran logika instruksi.`
-      ];
-      options = optionLetters.map((letter, optIdx) => {
-        if (letter === correctKey) {
+    if (domain === 'bahasa') {
+      stimulus = `Dalam telaah teks dan keterampilan berbahasa pada mata pelajaran ${actualMapel} topik "${topikCapaian}", peserta didik diajak mengkaji teks kontekstual secara kritis terkait integrasi nilai "${assignedElement}"${noteCustom}.`;
+      if (item.type === 'pg_ad' || item.type === 'pg_ae') {
+        butirSoal = `Berdasarkan telaah mendalam terhadap struktur teks materi "${topikCapaian}", manakah pernyataan berikut yang paling tepat dalam merumuskan gagasan utama secara kritis serta mencerminkan nilai "${assignedElement}"?`;
+        const distractorPool = [
+          `Menarik kesimpulan subjektif yang bertentangan dengan bukti tekstual dan kaidah kebahasaan baku.`,
+          `Hanya menafsirkan kata-kata secara harfiah tanpa mempertimbangkan konteks tuturan dan tujuan komunikatif teks.`,
+          `Mengabaikan fungsi konjungsi antarkalimat sehingga merusak kepaduan (kohesi) paragraf.`,
+          `Mencampuradukkan fakta dengan opini pribadi yang belum terverifikasi keabsahannya.`,
+          `Mengganti argumen logis dengan klaim emosional yang mengaburkan kejelasan pesan.`
+        ];
+        options = optionLetters.map((letter, optIdx) => {
+          if (letter === correctKey) {
+            return {
+              key: letter,
+              text: `Menganalisis keterpaduan paragraf secara kritis dan menyimpulkan amanat teks yang selaras dengan kaidah ${actualMapel} serta nilai "${assignedElement}".`
+            };
+          }
+          return { key: letter, text: distractorPool[optIdx % distractorPool.length] };
+        });
+        scoringGuide = `Skor 1 jika memilih (${correctKey}), skor 0 jika salah atau kosong.`;
+        explanation = `Opsi ${correctKey} tepat karena memadukan analisis struktur kebahasaan yang padu dengan refleksi nilai karakter ${assignedElement}.`;
+      } else if (item.type === 'benar_salah') {
+        correctKey = idx % 2 === 0 ? 'Benar' : 'Salah';
+        butirSoal = `Pernyataan: "Dalam menganalisis dan menyusun teks ${topikCapaian}, peserta didik hanya perlu memperhatikan keindahan kalimat semata tanpa perlu menguji kebenaran fakta maupun mengintegrasikan nilai ${assignedElement}." \n\nBagaimanakah kebenaran dari pernyataan tersebut?`;
+        options = [
+          { key: 'Benar', text: 'Pernyataan di atas BENAR' },
+          { key: 'Salah', text: 'Pernyataan di atas SALAH' }
+        ];
+        scoringGuide = `Skor 1 jika menjawab "${correctKey}", skor 0 jika sebaliknya.`;
+        explanation = `Pernyataan bernilai SALAH karena penulisan dan analisis teks yang bermutu wajib mengedepankan kebenaran data, etika literasi, dan tanggung jawab karakter ${assignedElement}.`;
+      } else if (item.type.includes('kompleks')) {
+        butirSoal = `Perhatikan butir-butir telaah kritis terhadap materi ${topikCapaian} berikut! Berikan tanda centang pada SEMUA pernyataan yang bernilai BENAR sesuai kaidah kebahasaan dan cerminan pilar "${assignedElement}":`;
+        const complexDistractorPool = [
+          `Mengabaikan tanda baca dan ejaan demi menghemat ruang penulisan teks.`,
+          `Memilih diksi provokatif tanpa memperhitungkan kesantunan berbahasa.`,
+          `Menghilangkan data pendukung agar argumen teks terlihat lebih ringkas namun rapuh.`
+        ];
+        options = optionLetters.map((letter, optIdx) => {
+          const isCorrect = correctKeys.includes(letter);
           return {
             key: letter,
-            text: `Menganalisis parameter masalah secara sistematis dan mengambil keputusan solutif yang selaras dengan prinsip ${assignedElement} serta kaidah ${actualMapel}.`
+            text: isCorrect
+              ? `Pernyataan ${letter}: Menerapkan kaidah kebahasaan yang santun, logis, dan menjunjung tinggi kejujuran intelektual sesuai pilar "${assignedElement}".`
+              : `Pernyataan ${letter}: ${complexDistractorPool[optIdx % complexDistractorPool.length]}`
           };
-        }
-        return {
-          key: letter,
-          text: distractorPool[optIdx % distractorPool.length]
-        };
-      });
-      scoringGuide = `Skor 1 jika menjawab benar (${correctKey}), skor 0 jika salah atau tidak menjawab.`;
-      explanation = `Opsi ${correctKey} adalah jawaban tepat karena menunjukkan pemahaman menyeluruh terhadap kaidah konsep ${topikCapaian} yang dihubungkan secara harmonis dengan dimensi/elemen ${assignedElement}.`;
-    } else if (item.type === 'benar_salah') {
-      correctKey = idx % 2 === 0 ? 'Benar' : 'Salah';
-      butirSoal = `Pernyataan: "Penerapan konsep ${topikCapaian} dalam kehidupan nyata tidak memerlukan pertimbangan etika maupun kepedulian terhadap ${assignedElement}, melainkan cukup menitikberatkan pada efisiensi teknis semata." \n\nBagaimanakah kebenaran dari pernyataan tersebut?`;
-      options = [
-        { key: 'Benar', text: 'Pernyataan di atas BENAR' },
-        { key: 'Salah', text: 'Pernyataan di atas SALAH' }
-      ];
-      scoringGuide = `Skor 1 jika memilih pilihan "${correctKey}", skor 0 jika memilih sebaliknya.`;
-      explanation = `Pernyataan bernilai SALAH karena setiap implementasi ${actualMapel} wajib mengedepankan etika keluhuran budi, tanggung jawab sosial, dan keterhubungan dengan ${assignedElement}.`;
-    } else if (item.type.includes('kompleks')) {
-      butirSoal = `Perhatikan beberapa alternatif tindakan dan kesimpulan terkait pemecahan masalah ${topikCapaian} berikut! Berikan tanda centang pada SEMUA pernyataan yang bernilai BENAR sesuai kaidah ilmiah dan elemen ${assignedElement}:`;
-      const complexDistractorPool = [
-        `Mengabaikan prosedur kendali mutu karena dianggap memperlambat proses penyelesaian persoalan lapangan.`,
-        `Menghilangkan tahapan verifikasi logika data agar biaya komputasi dapat dipangkas seminimal mungkin.`,
-        `Membatasi akses transparansi informasi algoritma kepada pengguna sistem yang berkepentingan.`
-      ];
-      options = optionLetters.map((letter, optIdx) => {
-        const isCorrect = correctKeys.includes(letter);
-        return {
-          key: letter,
-          text: isCorrect
-            ? `Pernyataan ${letter}: Mengintegrasikan prosedur ${actualMapel} yang adaptif dengan menjunjung tinggi pilar ${assignedElement} demi kemaslahatan bersama.`
-            : `Pernyataan ${letter}: ${complexDistractorPool[optIdx % complexDistractorPool.length]}`
-        };
-      });
-      scoringGuide = `Skor Penuh (2): Memilih tepat kombinasi (${correctKeys.join(', ')}). Skor Sebagian (1): Memilih 1 opsi benar tanpa memilih opsi salah. Skor 0: Memilih opsi salah.`;
-      explanation = `Pilihan yang benar adalah (${correctKeys.join(', ')}). Pernyataan-pernyataan ini memadukan ketepatan algoritma/konsep keilmuan dengan integritas karakter profil peserta didik.`;
+        });
+        scoringGuide = `Skor Penuh (2): Memilih tepat kombinasi (${correctKeys.join(', ')}). Skor Sebagian (1): Memilih 1 opsi benar tanpa memilih opsi salah. Skor 0: Salah.`;
+        explanation = `Kombinasi benar adalah (${correctKeys.join(', ')}), mencerminkan integritas literasi bahasa.`;
+      } else {
+        correctKey = 'Rubrik Analisis Kebahasaan';
+        butirSoal = `Buatlah analisis kritis komprehensif mengenai materi pokok "${topikCapaian}"! Dalam uraian Anda, jelaskan: \n1. Gagasan pokok dan struktur teks yang relevan,\n2. Kaidah kebahasaan yang digunakan untuk membangun argumen yang meyakinkan,\n3. Bukti konkret penerapan nilai karakter "${assignedElement}" dalam komunikasi Anda.`;
+        scoringGuide = `• Skor 4: Analisis struktur sangat tajam, kaidah kebahasaan tepat, dan refleksi nilai karakter ${assignedElement} sangat mendalam.\n• Skor 3: Struktur dan kebahasaan baik dengan integrasi karakter yang jelas.\n• Skor 2: Analisis bersifat umum pada 1-2 aspek.\n• Skor 1: Uraian sangat terbatas.`;
+        explanation = `Mengukur penguasaan level kognitif ${assignedBloom} melalui kemampuan sintesis teks, argumentasi logis, dan etika komunikasi.`;
+      }
+
+    } else if (domain === 'pancasila') {
+      stimulus = `Dalam konteks kehidupan berbangsa dan bernegara pada materi ${actualMapel} topik "${topikCapaian}", warga negara dituntut untuk menerapkan musyawarah, pemenuhan hak-kewajiban, dan ketaatan hukum demi tegaknya keadilan${noteCustom}.`;
+      if (item.type === 'pg_ad' || item.type === 'pg_ae') {
+        butirSoal = `Menghadapi tantangan sosial kemasyarakatan terkait materi "${topikCapaian}", tindakan manakah yang paling mencerminkan penerapan prinsip konstitusional dan nilai luhur "${assignedElement}"?`;
+        const distractorPool = [
+          `Mengambil tindakan sepihak yang melanggar prosedur hukum demi mencapai tujuan kelompok secara instan.`,
+          `Memaksakan kehendak mayoritas dan mengabaikan hak-hak asasi kelompok minoritas dalam forum musyawarah.`,
+          `Mengedepankan sentimen primordial dan mengesampingkan kepentingan persatuan bangsa yang lebih luas.`,
+          `Menolak musyawarah mufakat dan memilih penyelesaian konflik melalui konfrontasi terbuka.`,
+          `Menyebarkan informasi yang belum diverifikasi yang berpotensi memecah belah kerukunan antarwarga.`
+        ];
+        options = optionLetters.map((letter, optIdx) => {
+          if (letter === correctKey) {
+            return {
+              key: letter,
+              text: `Mengutamakan musyawarah untuk mufakat, menaati norma konstitusi, dan memelihara kerukunan yang selaras dengan nilai "${assignedElement}".`
+            };
+          }
+          return { key: letter, text: distractorPool[optIdx % distractorPool.length] };
+        });
+        scoringGuide = `Skor 1 jika memilih (${correctKey}), skor 0 jika salah.`;
+        explanation = `Opsi ${correctKey} tepat karena pengamalan nilai Pancasila menuntut penghormatan terhadap konsensus bersama, supremasi hukum, dan toleransi.`;
+      } else if (item.type === 'benar_salah') {
+        correctKey = idx % 2 === 0 ? 'Benar' : 'Salah';
+        butirSoal = `Pernyataan: "Penyelesaian masalah sosial dalam materi ${topikCapaian} dibenarkan menempuh cara-cara yang melanggar hukum dan mengabaikan ${assignedElement} asalkan dapat menghasilkan kesepakatan secara cepat." \n\nBagaimanakah kebenaran dari pernyataan tersebut?`;
+        options = [
+          { key: 'Benar', text: 'Pernyataan di atas BENAR' },
+          { key: 'Salah', text: 'Pernyataan di atas SALAH' }
+        ];
+        scoringGuide = `Skor 1 jika memilih "${correctKey}", skor 0 jika sebaliknya.`;
+        explanation = `Pernyataan bernilai SALAH karena setiap tindakan kemasyarakatan wajib menjunjung tinggi koridor hukum yang sah dan nilai-nilai moral.`;
+      } else if (item.type.includes('kompleks')) {
+        butirSoal = `Perhatikan alternatif kebijakan dan sikap warga negara dalam materi ${topikCapaian} berikut! Berikan tanda centang pada SEMUA tindakan yang bernilai BENAR sesuai konstitusi dan pilar "${assignedElement}":`;
+        const complexDistractorPool = [
+          `Membatasi hak suara warga yang berbeda pandangan dalam pengambilan keputusan publik.`,
+          `Menolak pelaporan pertanggungjawaban publik guna menghindari perdebatan masyarakat.`,
+          `Menjalankan program pembangunan tanpa melibatkan aspirasi masyarakat setempat.`
+        ];
+        options = optionLetters.map((letter, optIdx) => {
+          const isCorrect = correctKeys.includes(letter);
+          return {
+            key: letter,
+            text: isCorrect
+              ? `Pernyataan ${letter}: Menjunjung tinggi keadilan sosial, transparansi publik, dan penghormatan kebinekaan sesuai pilar "${assignedElement}".`
+              : `Pernyataan ${letter}: ${complexDistractorPool[optIdx % complexDistractorPool.length]}`
+          };
+        });
+        scoringGuide = `Skor Penuh (2): Memilih tepat (${correctKeys.join(', ')}). Skor Sebagian (1): 1 benar tanpa opsi salah.`;
+        explanation = `Kombinasi benar adalah (${correctKeys.join(', ')}).`;
+      } else {
+        correctKey = 'Rubrik Penilaian Konstitusional';
+        butirSoal = `Susunlah rancangan solusi partisipatif untuk memecahkan persoalan pada materi "${topikCapaian}"! Dalam jawaban Anda, uraikan: \n1. Dasar hukum dan nilai Pancasila yang menjadi landasan,\n2. Alur musyawarah dan keterlibatan seluruh pemangku kepentingan,\n3. Wujud nyata implementasi karakter "${assignedElement}" dalam solusi Anda.`;
+        scoringGuide = `• Skor 4: Analisis hukum konstitusi tajam, alur musyawarah demokratis, dan integrasi karakter ${assignedElement} kontekstual.\n• Skor 3: Kerangka konstitusi dan musyawarah baik.\n• Skor 2: Penjelasan normatif.\n• Skor 1: Terbatas.`;
+        explanation = `Mengukur level kognitif ${assignedBloom} melalui penalaran hukum, etika kewarganegaraan, dan sintesis sosial.`;
+      }
+
+    } else if (domain === 'sosial' || domain === 'agama' || domain === 'seni' || domain === 'pjok') {
+      stimulus = `Dalam konteks pembelajaran ${actualMapel} pada topik "${topikCapaian}", peserta didik diajak untuk mengamati fenomena kontekstual sehari-hari yang berkaitan dengan integrasi nilai "${assignedElement}"${noteCustom}.`;
+      if (item.type === 'pg_ad' || item.type === 'pg_ae') {
+        butirSoal = `Berdasarkan telaah mendalam terhadap materi "${topikCapaian}", manakah pernyataan berikut yang paling tepat dalam menunjukkan penerapan konsep yang mengintegrasikan nilai "${assignedElement}"?`;
+        const distractorPool = [
+          `Mengabaikan analisis akar permasalahan dan langsung mengambil kesimpulan intuitif tanpa pertimbangan data.`,
+          `Mengurangi tahapan refleksi kritis karena dianggap memperlambat waktu pengambilan keputusan.`,
+          `Hanya memfokuskan tindakan pada aspek kenyamanan sesaat tanpa mempertimbangkan dampak jangka panjang bagi komunitas.`,
+          `Menerapkan langkah acak tanpa pengujian kesesuaian terhadap prinsip keilmuan dan etika.`,
+          `Menyerahkan seluruh perumusan pertimbangan kepada pihak lain tanpa melakukan validasi mandiri.`
+        ];
+        options = optionLetters.map((letter, optIdx) => {
+          if (letter === correctKey) {
+            return {
+              key: letter,
+              text: `Menganalisis parameter persoalan secara sistematis dan mengambil keputusan solutif yang selaras dengan prinsip ${assignedElement} serta kaidah ${actualMapel}.`
+            };
+          }
+          return { key: letter, text: distractorPool[optIdx % distractorPool.length] };
+        });
+        scoringGuide = `Skor 1 jika menjawab benar (${correctKey}), skor 0 jika salah atau kosong.`;
+        explanation = `Opsi ${correctKey} tepat karena menunjukkan penguasaan materi ${topikCapaian} yang dihubungkan secara harmonis dengan dimensi ${assignedElement}.`;
+      } else if (item.type === 'benar_salah') {
+        correctKey = idx % 2 === 0 ? 'Benar' : 'Salah';
+        butirSoal = `Pernyataan: "Penerapan konsep materi ${topikCapaian} dalam kehidupan sehari-hari tidak memerlukan pertimbangan etika maupun kepedulian terhadap ${assignedElement}, melainkan cukup menitikberatkan pada hasil pragmatis semata." \n\nBagaimanakah kebenaran dari pernyataan tersebut?`;
+        options = [
+          { key: 'Benar', text: 'Pernyataan di atas BENAR' },
+          { key: 'Salah', text: 'Pernyataan di atas SALAH' }
+        ];
+        scoringGuide = `Skor 1 jika memilih "${correctKey}", skor 0 jika memilih sebaliknya.`;
+        explanation = `Pernyataan bernilai SALAH karena setiap implementasi ${actualMapel} wajib mengedepankan tanggung jawab moral dan keterhubungan dengan ${assignedElement}.`;
+      } else if (item.type.includes('kompleks')) {
+        butirSoal = `Perhatikan beberapa alternatif tindakan terkait materi ${topikCapaian} berikut! Berikan tanda centang pada SEMUA pernyataan yang bernilai BENAR sesuai kaidah ilmiah dan elemen ${assignedElement}:`;
+        const complexDistractorPool = [
+          `Mengabaikan prosedur kendali mutu karena dianggap memperlambat proses penyelesaian.`,
+          `Menghilangkan tahapan verifikasi data lapangan demi penghematan sumber daya.`,
+          `Membatasi keterbukaan informasi kepada pihak-pihak yang berkepentingan.`
+        ];
+        options = optionLetters.map((letter, optIdx) => {
+          const isCorrect = correctKeys.includes(letter);
+          return {
+            key: letter,
+            text: isCorrect
+              ? `Pernyataan ${letter}: Mengintegrasikan prosedur ${actualMapel} yang adaptif dengan menjunjung tinggi pilar ${assignedElement} demi kemaslahatan bersama.`
+              : `Pernyataan ${letter}: ${complexDistractorPool[optIdx % complexDistractorPool.length]}`
+          };
+        });
+        scoringGuide = `Skor Penuh (2): Memilih tepat kombinasi (${correctKeys.join(', ')}). Skor Sebagian (1): 1 benar tanpa salah.`;
+        explanation = `Pilihan yang benar adalah (${correctKeys.join(', ')}).`;
+      } else {
+        correctKey = 'Rubrik Penilaian';
+        butirSoal = `Jelaskan secara komprehensif rancangan strategi pemecahan masalah pada materi "${topikCapaian}"! Dalam jawaban Anda, uraikan: \n1. Analisis akar penyebab masalah,\n2. Langkah-langkah penyelesaian bertahap berbasis kaidah ${actualMapel},\n3. Bukti nyata perwujudan karakter "${assignedElement}" dalam solusi Anda.`;
+        scoringGuide = `• Skor 4: Analisis tajam, logis, sistematis, dan refleksi nilai karakter ${assignedElement} sangat kontekstual.\n• Skor 3: Uraian baik dengan refleksi karakter yang jelas.\n• Skor 2: Uraian umum.\n• Skor 1: Terbatas.`;
+        explanation = `Mengukur level kognitif ${assignedBloom} melalui penalaran analitis terstruktur dan sintesis ide solutif.`;
+      }
+
     } else {
-      correctKey = 'Rubrik Kriteria Penilaian';
-      butirSoal = `Jelaskan secara komprehensif bagaimana rancangan strategi Anda dalam memecahkan permasalahan pada materi ${topikCapaian}! Dalam jawaban Anda, uraikan sekurang-kurangnya: \n1. Analisis akar penyebab masalah,\n2. Langkah-langkah penyelesaian bertahap berbasis kaidah ${actualMapel},\n3. Bukti nyata perwujudan karakter "${assignedElement}" dalam solusi yang Anda ajukan.`;
-      scoringGuide = `• Skor 4 (Sangat Baik): Menguraikan ketiga aspek dengan analisis tajam, logis, sistematis, dan refleksi nilai karakter ${assignedElement} sangat kontekstual.\n• Skor 3 (Baik): Menguraikan ketiga aspek namun penjelasan integrasi karakter masih bersifat normatif.\n• Skor 2 (Cukup): Hanya menguraikan 1-2 aspek secara umum.\n• Skor 1 (Kurang): Jawaban sangat terbatas dan belum menyentuh substansi materi pokok.`;
-      explanation = `Peserta didik diharapkan mampu mendemonstrasikan level kognitif ${assignedBloom} melalui penalaran analitis terstruktur dan sintesis ide inovatif.`;
+      // Domain Informatika Teori / Berpikir Komputasional / Default
+      stimulus = `Dalam konteks pembelajaran ${actualMapel} pada topik "${topikCapaian}", peserta didik diajak untuk mengamati fenomena pemecahan masalah dengan 4 fondasi berpikir komputasional (dekomposisi, pengenalan pola, abstraksi, dan perancangan algoritma) yang terintegrasi dengan nilai "${assignedElement}"${noteCustom}.`;
+      if (item.type === 'pg_ad' || item.type === 'pg_ae') {
+        butirSoal = `Berdasarkan telaah mendalam terhadap materi "${topikCapaian}", manakah pernyataan berikut yang paling tepat dalam menunjukkan penerapan solusi algoritmik yang mengintegrasikan nilai "${assignedElement}"?`;
+        const distractorPool = [
+          `Mengabaikan dekomposisi masalah dan langsung mengambil kesimpulan intuitif tanpa verifikasi data terstruktur.`,
+          `Mengurangi tahapan analisis abstraksi karena dianggap memperlambat waktu pengambilan keputusan.`,
+          `Hanya memfokuskan solusi pada aspek kemudahan sesaat tanpa mempertimbangkan efisiensi algoritma jangka panjang.`,
+          `Menerapkan algoritma acak tanpa pengujian kasus uji (test case) terhadap batasan kompleksitas masalah.`,
+          `Menyerahkan seluruh perumusan solusi kepada pihak ketiga tanpa melakukan validasi kebenaran logika instruksi.`
+        ];
+        options = optionLetters.map((letter, optIdx) => {
+          if (letter === correctKey) {
+            return {
+              key: letter,
+              text: `Menganalisis parameter masalah secara sistematis dan mengambil keputusan solutif yang selaras dengan prinsip ${assignedElement} serta kaidah berpikir komputasional ${actualMapel}.`
+            };
+          }
+          return { key: letter, text: distractorPool[optIdx % distractorPool.length] };
+        });
+        scoringGuide = `Skor 1 jika menjawab benar (${correctKey}), skor 0 jika salah atau kosong.`;
+        explanation = `Opsi ${correctKey} adalah jawaban tepat karena menunjukkan pemahaman menyeluruh terhadap kaidah konsep ${topikCapaian} yang dihubungkan secara harmonis dengan dimensi/elemen ${assignedElement}.`;
+      } else if (item.type === 'benar_salah') {
+        correctKey = idx % 2 === 0 ? 'Benar' : 'Salah';
+        butirSoal = `Pernyataan: "Penerapan konsep ${topikCapaian} dalam kehidupan nyata tidak memerlukan pertimbangan etika maupun kepedulian terhadap ${assignedElement}, melainkan cukup menitikberatkan pada efisiensi teknis semata." \n\nBagaimanakah kebenaran dari pernyataan tersebut?`;
+        options = [
+          { key: 'Benar', text: 'Pernyataan di atas BENAR' },
+          { key: 'Salah', text: 'Pernyataan di atas SALAH' }
+        ];
+        scoringGuide = `Skor 1 jika memilih pilihan "${correctKey}", skor 0 jika memilih sebaliknya.`;
+        explanation = `Pernyataan bernilai SALAH karena setiap implementasi ${actualMapel} wajib mengedepankan etika keluhuran budi, tanggung jawab sosial, dan keterhubungan dengan ${assignedElement}.`;
+      } else if (item.type.includes('kompleks')) {
+        butirSoal = `Perhatikan beberapa alternatif tindakan dan kesimpulan terkait pemecahan masalah ${topikCapaian} berikut! Berikan tanda centang pada SEMUA pernyataan yang bernilai BENAR sesuai kaidah ilmiah dan elemen ${assignedElement}:`;
+        const complexDistractorPool = [
+          `Mengabaikan prosedur kendali mutu karena dianggap memperlambat proses penyelesaian persoalan lapangan.`,
+          `Menghilangkan tahapan verifikasi logika data agar biaya komputasi dapat dipangkas seminimal mungkin.`,
+          `Membatasi akses transparansi informasi algoritma kepada pengguna sistem yang berkepentingan.`
+        ];
+        options = optionLetters.map((letter, optIdx) => {
+          const isCorrect = correctKeys.includes(letter);
+          return {
+            key: letter,
+            text: isCorrect
+              ? `Pernyataan ${letter}: Mengintegrasikan prosedur ${actualMapel} yang adaptif dengan menjunjung tinggi pilar ${assignedElement} demi kemaslahatan bersama.`
+              : `Pernyataan ${letter}: ${complexDistractorPool[optIdx % complexDistractorPool.length]}`
+          };
+        });
+        scoringGuide = `Skor Penuh (2): Memilih tepat kombinasi (${correctKeys.join(', ')}). Skor Sebagian (1): Memilih 1 opsi benar tanpa memilih opsi salah. Skor 0: Memilih opsi salah.`;
+        explanation = `Pilihan yang benar adalah (${correctKeys.join(', ')}). Pernyataan-pernyataan ini memadukan ketepatan algoritma/konsep keilmuan dengan integritas karakter profil peserta didik.`;
+      } else {
+        correctKey = 'Rubrik Kriteria Penilaian';
+        butirSoal = `Jelaskan secara komprehensif bagaimana rancangan strategi Anda dalam memecahkan permasalahan pada materi "${topikCapaian}"! Dalam jawaban Anda, uraikan sekurang-kurangnya: \n1. Analisis akar penyebab masalah melalui dekomposisi,\n2. Langkah-langkah penyelesaian bertahap berbasis kaidah berpikir komputasional ${actualMapel},\n3. Bukti nyata perwujudan karakter "${assignedElement}" dalam solusi yang Anda ajukan.`;
+        scoringGuide = `• Skor 4 (Sangat Baik): Menguraikan ketiga aspek dengan analisis tajam, logis, sistematis, dan refleksi nilai karakter ${assignedElement} sangat kontekstual.\n• Skor 3 (Baik): Menguraikan ketiga aspek namun penjelasan integrasi karakter masih bersifat normatif.\n• Skor 2 (Cukup): Hanya menguraikan 1-2 aspek secara umum.\n• Skor 1 (Kurang): Jawaban sangat terbatas dan belum menyentuh substansi materi pokok.`;
+        explanation = `Peserta didik diharapkan mampu mendemonstrasikan level kognitif ${assignedBloom} melalui penalaran analitis terstruktur dan sintesis ide inovatif.`;
+      }
     }
   }
 
@@ -453,6 +978,7 @@ const generateLocalizedQuestion = ({
 /**
  * High-Pedagogy Built-in Engine
  * Menghasilkan soal lengkap dengan stimulus kontekstual, indikator, kisi-kisi, kartu soal, dan elemen kurikulum
+ * SETIA DAN PATUH 100% PADA INPUTAN PENGGUNA DI LANGKAH 1 & LANGKAH 2
  */
 export const generateQuestionsLocally = (config) => {
   const {
@@ -463,6 +989,8 @@ export const generateQuestionsLocally = (config) => {
     mataPelajaran,
     mataPelajaranCustom,
     topikCapaian,
+    capaianPembelajaran,
+    tujuanPembelajaran = [],
     selectedElements = [],
     questionCounts = { pg: 5, pg_kompleks: 3, benar_salah: 0, esai: 2 },
     withMedia = true,
@@ -476,7 +1004,6 @@ export const generateQuestionsLocally = (config) => {
   const actualMapel = mataPelajaran === 'Lainnya' ? (mataPelajaranCustom || 'Umum') : mataPelajaran;
 
   const isFaseABCD = ['A', 'B', 'C', 'D'].includes(fase);
-  const maxOption = isFaseABCD ? 4 : 5;
   const optionLetters = isFaseABCD ? ['A', 'B', 'C', 'D'] : ['A', 'B', 'C', 'D', 'E'];
 
   // Kumpulkan list bentuk soal yang diminta
@@ -525,6 +1052,8 @@ export const generateQuestionsLocally = (config) => {
     });
   }
 
+  const totalQuestions = listItems.length;
+
   // Distribusi Elemen Karakter / KBC / Profil Lulusan
   const elementPool = selectedElements.length > 0
     ? selectedElements
@@ -532,8 +1061,10 @@ export const generateQuestionsLocally = (config) => {
         ? ['Cinta Ilmu', 'Cinta Lingkungan', 'Cinta Tanah Air', 'Cinta Diri dan Sesama Manusia', 'Cinta Allah Swt. dan Rasul-Nya']
         : ['Penalaran Kritis', 'Kreativitas', 'Kolaborasi', 'Kemandirian', 'Kewargaan']);
 
-  // Distribusi Level Kognitif
-  const bloomLevels = ['C1', 'C2', 'C3', 'C4', 'C5', 'C6'];
+  // Distribusi Level Kognitif & Tingkat Kesukaran Sesuai Input Pengguna Persis
+  const bloomDistribution = calculateBloomDistribution(bloom, totalQuestions);
+  const diffDistribution = calculateDifficultyDistribution(difficulty, totalQuestions, bloomDistribution);
+
   const bloomLabels = {
     C1: 'Mengingat (LOTS)',
     C2: 'Memahami (LOTS)',
@@ -543,15 +1074,35 @@ export const generateQuestionsLocally = (config) => {
     C6: 'Mencipta (HOTS)'
   };
 
+  // Daftar Tujuan Pembelajaran (TP) dari Input Langkah 1
+  const tpList = (Array.isArray(tujuanPembelajaran) && tujuanPembelajaran.length > 0)
+    ? tujuanPembelajaran
+    : [
+        `Menerapkan konsep pokok ${topikCapaian} dalam memecahkan masalah kontekstual secara terstruktur.`,
+        `Menganalisis dan mengevaluasi fenomena terkait ${topikCapaian} dengan penalaran kritis.`,
+        `Merancang solusi inovatif berdasar kaidah keilmuan ${actualMapel} pada topik ${topikCapaian}.`
+      ];
+
+  // Rumusan Capaian Pembelajaran (CP) dari Input Langkah 1
+  const finalCapaianText = capaianPembelajaran && capaianPembelajaran.trim() !== ''
+    ? capaianPembelajaran
+    : `Pada akhir Fase ${fase}, peserta didik menguasai kompetensi esensial materi ${topikCapaian} pada mata pelajaran ${actualMapel} secara mendalam dan berakhlak mulia.`;
+
   // Pengaturan Bahasa Soal
   const langMode = languageConfig.mode || 'id';
   const bilingualCountId = languageConfig.bilingualCounts?.id ?? Math.ceil(listItems.length / 2);
 
+  // Deteksi Domain Eksak vs Kualitatif
+  const subjectCategory = detectSubjectCategory(actualMapel, topikCapaian);
+  const isQuant = isQuantitativeSubject(subjectCategory, actualMapel, topikCapaian);
+
   // Generate Questions Data
   const generatedQuestions = listItems.map((item, idx) => {
-    const assignedBloom = bloomLevels[idx % bloomLevels.length];
+    const assignedBloom = bloomDistribution[idx] || 'C3';
     const assignedElement = elementPool[idx % elementPool.length];
-    const diffLevel = idx % 3 === 0 ? 'Mudah' : (idx % 3 === 1 ? 'Sedang' : 'Sulit');
+    const diffLevel = diffDistribution[idx] || 'Sedang';
+    const assignedTP = tpList[idx % tpList.length];
+
     const hasVisual = withMedia && (idx % 2 === 0 || item.type.includes('kompleks'));
     const visualType = idx % 3 === 0 ? 'flowchart' : (idx % 3 === 1 ? 'chart' : 'ecosystem');
 
@@ -574,15 +1125,12 @@ export const generateQuestionsLocally = (config) => {
     const defaultCorrectKey = optionLetters[idx % optionLetters.length];
     const defaultCorrectKeys = isFaseABCD ? ['A', 'C'] : ['A', 'C', 'E'];
 
-    const subjectCategory = detectSubjectCategory(actualMapel, topikCapaian);
-    const isQuant = isQuantitativeSubject(subjectCategory);
-
     let localized;
     let finalSvgVisual = null;
     let itemHasVisual = hasVisual;
 
     if (isQuant) {
-      // Pembuatan Soal Kuantitatif Alami (Matematika, Fisika, Kimia, Informatika, Ekonomi, Biologi, Geografi)
+      // Pembuatan Soal Kuantitatif Alami (Matematika, Fisika, Kimia, Informatika Eksak, Ekonomi Hitung, Biologi Mendel, Geografi Kontur)
       localized = generateExactScienceQuestion({
         subjectCategory,
         actualMapel,
@@ -599,13 +1147,12 @@ export const generateQuestionsLocally = (config) => {
         defaultCorrectKey
       });
 
-      // Untuk subjek kuantitatif/eksak, sertakan diagram visual jika opsi withMedia aktif
       itemHasVisual = withMedia;
       if (itemHasVisual && localized.svgType) {
         finalSvgVisual = generateSvgIllustration(localized.svgType, `Diagram No. ${item.no} - ${actualMapel}`);
       }
     } else {
-      // Pembuatan Soal Umum
+      // Pembuatan Soal Kualitatif Sesuai Domain Mapel (Bahasa, Pancasila, Sosial, Agama, Seni, PJOK, Informatika Teori)
       localized = generateLocalizedQuestion({
         item,
         idx,
@@ -614,6 +1161,8 @@ export const generateQuestionsLocally = (config) => {
         topikCapaian,
         assignedElement,
         assignedBloom,
+        assignedTP,
+        customInstruction,
         isFaseABCD,
         optionLetters,
         defaultCorrectKey,
@@ -625,17 +1174,18 @@ export const generateQuestionsLocally = (config) => {
       }
     }
 
-    const capaianText = isQuant
-      ? `Peserta didik mampu menerapkan formulasi terstandar, melakukan perhitungan numerik berbasis data terukur, menganalisis diagram/grafik fisis, dan memecahkan masalah kontekstual ${actualMapel} ${kelas} pada materi ${topikCapaian} secara akurat.`
-      : `Peserta didik mampu menganalisis, mengevaluasi, dan merefleksikan konsep ${topikCapaian} secara kritis serta berkarakter luhur.`;
-
-    const indikatorText = isQuant
-      ? `Disajikan stimulus kontekstual dan data numerik materi ${topikCapaian}, peserta didik dapat mengaplikasikan rumus untuk menghitung besaran yang tepat.`
-      : `Disajikan stimulus kontekstual tentang ${topikCapaian}, peserta didik dapat menentukan solusi/analisis yang tepat dengan mencerminkan nilai ${assignedElement}.`;
+    const indikatorText = generatePedagogicalIndicator({
+      topikCapaian,
+      assignedBloom,
+      assignedTP,
+      assignedElement,
+      hasVisual: itemHasVisual,
+      isQuant
+    });
 
     const sumberText = isQuant
-      ? `Buku Siswa & Panduan Guru ${actualMapel} ${kelas} Kemendikdasmen, Kumpulan Soal Sains & Kalkulasi Terstandar`
-      : `Buku Guru & Siswa ${actualMapel} ${kelas}, Modul Ajar Resmi, Referensi Kurikulum Terstandar`;
+      ? `Buku Guru & Siswa ${actualMapel} ${kelas} Kemendikdasmen, Kumpulan Rumus & Soal Asesmen Terstandar`
+      : `Buku Panduan Guru & Siswa ${actualMapel} ${kelas} Kemendikdasmen, Modul Ajar Resmi Kurikulum Merdeka`;
 
     return {
       no: item.no,
@@ -651,7 +1201,8 @@ export const generateQuestionsLocally = (config) => {
       correctKey: localized.correctKey,
       correctKeys: item.type.includes('kompleks') ? localized.correctKeys : null,
       materi: topikCapaian,
-      capaianPembelajaran: capaianText,
+      capaianPembelajaran: finalCapaianText,
+      tujuanPembelajaran: assignedTP,
       indikator: indikatorText,
       levelKognitif: assignedBloom,
       levelLabel: bloomLabels[assignedBloom] || assignedBloom,
@@ -666,7 +1217,7 @@ export const generateQuestionsLocally = (config) => {
   return {
     meta: {
       generatedAt: new Date().toISOString(),
-      generatorEngine: 'EduAsesmen Hybrid AI Engine',
+      generatorEngine: 'EduAsesmen Hybrid Pedagogical Engine',
       totalQuestions: generatedQuestions.length,
       config
     },
@@ -676,6 +1227,7 @@ export const generateQuestionsLocally = (config) => {
 
 /**
  * Pemanggilan Gemini API jika user memasukkan API Key
+ * Menjamin 100% data CP, TP, ATP, Bloom, Kesukaran, dan Bahasa terbaca utuh
  */
 export const generateQuestionsViaGemini = async (config, apiKey) => {
   if (!apiKey || apiKey.trim() === '') {
@@ -690,12 +1242,15 @@ export const generateQuestionsViaGemini = async (config, apiKey) => {
     mataPelajaran,
     mataPelajaranCustom,
     topikCapaian,
+    capaianPembelajaran,
+    tujuanPembelajaran = [],
+    alurTujuanPembelajaran = [],
     selectedElements = [],
-    questionCounts,
-    withMedia,
-    difficulty,
-    bloom,
-    customInstruction,
+    questionCounts = { pg: 5, pg_kompleks: 3, benar_salah: 0, esai: 2 },
+    withMedia = true,
+    difficulty = { mudah: 30, sedang: 50, sulit: 20 },
+    bloom = { c1: 1, c2: 2, c3: 3, c4: 2, c5: 1, c6: 1 },
+    customInstruction = '',
     languageConfig = { mode: 'id', bilingualCounts: { id: 5, en: 5 } }
   } = config;
 
@@ -710,7 +1265,16 @@ export const generateQuestionsViaGemini = async (config, apiKey) => {
     (Number(questionCounts.esai) || 0);
 
   const bilingualCountId = languageConfig.bilingualCounts?.id ?? Math.ceil(totalQuestions / 2);
-  const bilingualCountEn = languageConfig.bilingualCounts?.en ?? Math.max(0, totalQuestions - bilingualCountId);
+
+  const tpList = (Array.isArray(tujuanPembelajaran) && tujuanPembelajaran.length > 0)
+    ? tujuanPembelajaran
+    : [
+        `Menerapkan konsep pokok ${topikCapaian} dalam memecahkan masalah kontekstual secara terstruktur.`,
+        `Menganalisis dan mengevaluasi fenomena terkait ${topikCapaian} dengan penalaran kritis.`
+      ];
+
+  const bloomDistribution = calculateBloomDistribution(bloom, totalQuestions);
+  const diffDistribution = calculateDifficultyDistribution(difficulty, totalQuestions, bloomDistribution);
 
   let languageInstruction = '';
   if (languageConfig.mode === 'en') {
@@ -720,7 +1284,7 @@ export const generateQuestionsViaGemini = async (config, apiKey) => {
   } else if (languageConfig.mode === 'fr') {
     languageInstruction = `ATURAN BAHASA SOAL (SANGAT PENTING): Seluruh naskah soal, narasi stimulus, opsi jawaban, pembahasan ilmiah, dan pedoman penskoran WAJIB 100% ditulis dalam BAHASA PRANCIS (Langue Française). Cantumkan field "language": "fr" pada setiap butir soal.`;
   } else if (languageConfig.mode === 'palembang') {
-    languageInstruction = `ATURAN BAHASA SOAL (SANGAT PENTING): Seluruh naskah soal dan narasi stimulus studi kasus WAJIB ditulis dalam BAHASA PALEMBANG (Baso Pelembang / Kearifan Lokal Melayu Palembang Sumatera Selatan) yang santun, komunikatif, dan mendidik (gunakan kosa kata dialek Palembang seperti: apo, cakmano, pacak, kito, gawenyo, kalu, jangan, cuguk, nian, dsb). Cantumkan field "language": "palembang" pada setiap butir soal.`;
+    languageInstruction = `ATURAN BAHASA SOAL (SANGAT PENTING): Seluruh naskah soal dan narasi stimulus studi kasus WAJIB ditulis dalam BAHASA PALEMBANG (Baso Pelembang / Kearifan Lokal Melayu Palembang Sumatera Selatan) yang santun, komunikatif, dan mendidik. Cantumkan field "language": "palembang" pada setiap butir soal.`;
   } else if (languageConfig.mode === 'bilingual') {
     languageInstruction = `ATURAN BAHASA BILINGUAL (SANGAT PENTING): Paket ujian ini BILINGUAL (Dua Bahasa):
   * Butir soal nomor 1 sampai ${bilingualCountId} WAJIB dibuat dalam BAHASA INDONESIA baku. Cantumkan field "language": "id".
@@ -730,55 +1294,66 @@ export const generateQuestionsViaGemini = async (config, apiKey) => {
   }
 
   const subjectCategory = detectSubjectCategory(actualMapel, topikCapaian);
-  const isQuant = isQuantitativeSubject(subjectCategory);
+  const isQuant = isQuantitativeSubject(subjectCategory, actualMapel, topikCapaian);
+
   let exactScienceInstruction = '';
   if (isQuant) {
     exactScienceInstruction = `
 ========================================================================
 PERATURAN WAJIB MATA PELAJARAN KUANTITATIF & EKSAK (${actualMapel.toUpperCase()} - FASE ${fase} / ${kelas}):
-1. DILARANG KERAS MEMBUAT SOAL TEORI HAFALAN, DEFINISI KATA-KATA, ATAU TEKS NARASI NON-HITUNGAN!
+1. DILARANG KERAS MEMBUAT SOAL TEORI HAFALAN ATAU DEFINISI KATA-KATA!
 2. SELURUH SOAL WAJIB BERUPA SOAL PERHITUNGAN MATEMATIS / SAINS DENGAN ANGKA KUANTITATIF NYATA (NUMERICAL PROBLEMS) SEBAGAIMANA ASESMEN UJIAN RESMI / TKA / SNBT / UTBK / CAMBRIDGE YANG SESUNGGUHNYA.
-3. FORMULASI RUMUS & TINGKAT KESULITAN WAJIB SESUAI DENGAN FASE ${fase} DAN ${kelas}:
-   - Jika Matematika SD (Fase A/B/C): Perhitungan bilangan cacah, pecahan, desimal, bangun datar keliling/luas, skala perbandingan, volume kubus/balok, rata-rata dengan angka cerita kontekstual.
-   - Jika Matematika SMP (Fase D): Aljabar persamaan linear, SPLDV, teorema Pythagoras segitiga, luas juring & busur lingkaran, bangun ruang sisi lengkung (tabung/kerucut), gradien garis lurus, statistika, peluang dengan rumus dan angka nyata.
-   - Jika Matematika SMA (Fase E/F): Trigonometri segitiga & sudut elevasi/aturan sinus, kurva grafik fungsi kuadrat parabola f(x), barisan & deret aritmetika/geometri, persamaan eksponen & logaritma, turunan fungsi kalkulus aljabar ekstrem, matriks determinan/invers dengan angka dan kalkulasi presisi.
-   - Jika Fisika: Rumus resmi fisika (Hukum Newton gaya gesek FBD, rangkaian listrik seri-paralel Ohm/Kirchhoff, grafik kinematika v-t trapesium, usaha energi mekanik, tekanan fluida hidrostatis) dengan besaran, satuan SI, dan angka nyata.
-   - Jika Kimia: Rumus stoikiometri mol, gas STP, titrasi asam-basa netralisasi volumetri, termokimia entalpi ΔH, potensial sel Volta standar dengan data angka nyata dan satuan resmi.
-   - Jika Informatika/Koding: Konversi biner/heksadesimal, subnetting IPv4 CIDR /26 host valid, tabel gerbang logika boolean, iterasi perulangan Big-O O(n²), confusion matrix metrik AI.
-   - Jika Ekonomi: Keseimbangan pasar Qd=Qs (harga P dan kuantitas Q), Break Even Point (BEP unit & rupiah), koefisien elastisitas Ed.
-   - Jika Biologi/IPA/Geografi: Persilangan dihibrid Mendel rasio 9:3:3:1 dan populasi nyata, piramida aliran energi trofik 10%, skala peta dan kontur interval CI.
-4. OPSI PILIHAN JAWABAN (A, B, C, D, E) WAJIB BERUPA ANGKA HASIL PERHITUNGAN BESERTA SATUAN RESMI ATAU NILAI PERSAMAAN. DILARANG MEMBUAT OPSI BERUPA KALIMAT NARASI PANJANG!
-5. FIELD "explanation" WAJIB MENYAJIKAN TAHAPAN PERHITUNGAN MATEMATIS LENGKAP & RUNUT:
-   - Diketahui: (besaran & nilai angka)
-   - Ditanya: (variabel)
-   - Rumus yang digunakan
-   - Langkah substitusi angka langkah demi langkah
-   - Hasil akhir dan satuan
-6. FIELD "hasVisual" WAJIB bernilai true pada setiap butir soal yang merujuk diagram/grafik/bangun geometri.
+3. RUMUS & TINGKAT KESULITAN WAJIB SESUAI DENGAN FASE ${fase} DAN ${kelas}.
+4. OPSI PILIHAN JAWABAN (A, B, C, D, E) WAJIB BERUPA ANGKA HASIL PERHITUNGAN BESERTA SATUAN RESMI ATAU NILAI PERSAMAAN.
+5. FIELD "explanation" WAJIB MENYAJIKAN TAHAPAN PERHITUNGAN MATEMATIS LENGKAP & RUNUT (Diketahui, Ditanya, Rumus, Langkah Substitusi Angka, Hasil Akhir).
 ========================================================================
 `;
   }
 
-  const prompt = `Anda adalah Asisten Pakar Evaluasi Pendidikan dan Asesmen Kurikulum Nasional Kemendikdasmen.
-Tugas Anda: Buat paket soal ujian terstruktur lengkap beserta Kisi-Kisi dan Kartu Soal.
+  const prompt = `Anda adalah Ahli Perencanaan Pembelajaran Kurikulum Merdeka dan Guru Mata Pelajaran Berpengalaman Nasional Kemendikdasmen.
+Tugas Anda: Buat paket soal ujian terstruktur lengkap beserta Kisi-Kisi dan Kartu Soal yang BENAR-BENAR BERDASARKAN DAN SETIA PADA SELURUH DATA INPUTAN PENGGUNA BERIKUT:
 
-Data Profil:
-- Jenjang / Fase: ${fase} (${kelas})
+DATA IDENTITAS & KURIKULUM (LANGKAH 1):
+- Nama Guru Pengampu: ${config.namaGuru || 'Guru Pengampu'}
+- Satuan Pendidikan: ${config.namaInstitusi || 'SMAN Sumatera Selatan'}
+- Jenjang & Fase: ${fase} (${kelas})
 - Kurikulum: ${actualKurikulum}
 - Mata Pelajaran: ${actualMapel}
-- Topik / Capaian Pembelajaran: ${topikCapaian}
-- Elemen Kurikulum yang Wajib Diintegrasikan: ${selectedElements.join(', ')}
-- Ketentuan Bentuk Soal:
-  * Pilihan Ganda: ${questionCounts.pg} butir (${['A','B','C','D'].includes(fase) ? 'Opsi A-D' : 'Opsi A-E'})
+- Topik / Lingkup Materi: ${topikCapaian}
+- Capaian Pembelajaran (CP) Resmi: "${capaianPembelajaran || '-'}"
+- Tujuan Pembelajaran (TP) yang Wajib Dipetakan pada butir soal:
+${tpList.map((tp, i) => `  * TP ${i + 1}: ${tp}`).join('\n')}
+- Alur Tujuan Pembelajaran (ATP): ${(alurTujuanPembelajaran || []).join(' -> ') || '-'}
+- Dimensi / Elemen Karakter yang Diintegrasikan: ${selectedElements.join(', ') || 'Penalaran Kritis'}
+
+KONFIGURASI TEKNIS & SPESIFIKASI SOAL (LANGKAH 2):
+- Total Butir Soal: ${totalQuestions}
+- Komposisi Bentuk Soal:
+  * Pilihan Ganda: ${questionCounts.pg} butir (${isFaseABCD ? 'Opsi A-D' : 'Opsi A-E'})
   * Pilihan Ganda Kompleks: ${questionCounts.pg_kompleks} butir
-  * Benar-Salah: ${['A','B','C','D'].includes(fase) ? (questionCounts.benar_salah || 0) : 0} butir
+  * Benar-Salah: ${isFaseABCD ? (questionCounts.benar_salah || 0) : 0} butir
   * Esai: ${questionCounts.esai} butir
-- Tingkat Kesulitan: Mudah ${difficulty.mudah}%, Sedang ${difficulty.sedang}%, Sulit ${difficulty.sulit}%
-- Dimensi Kognitif Bloom: C1-C6 terdistribusi proporsional
-- Sertakan Ilustrasi/Visual: ${withMedia ? 'YA (berikan deskripsi visual dan prompt gambar/diagram)' : 'TIDAK'}
+- Target Distribusi Level Kognitif Bloom (C1-C6):
+  * C1 (Mengingat): ${bloom.c1 || 0} butir
+  * C2 (Memahami): ${bloom.c2 || 0} butir
+  * C3 (Menerapkan): ${bloom.c3 || 0} butir
+  * C4 (Menganalisis): ${bloom.c4 || 0} butir
+  * C5 (Mengevaluasi): ${bloom.c5 || 0} butir
+  * C6 (Mencipta): ${bloom.c6 || 0} butir
+  (Urutan level kognitif per nomor soal: ${bloomDistribution.join(', ')})
+- Proporsi Kesukaran: Mudah ${difficulty.mudah}%, Sedang ${difficulty.sedang}%, Sulit ${difficulty.sulit}%
+  (Urutan kesukaran per nomor soal: ${diffDistribution.join(', ')})
+- Sertakan Ilustrasi / Diagram Visual: ${withMedia ? 'YA (cantumkan deskripsi visual dan hasVisual: true)' : 'TIDAK'}
 - ${languageInstruction}
 ${exactScienceInstruction}
 - Instruksi Khusus Pengguna: ${customInstruction || 'Tidak ada'}
+
+PETUNJUK PEDAGOGIS KHUSUS:
+1. Setiap butir soal WAJIB memetakan salah satu Tujuan Pembelajaran (TP) dari daftar di atas ke dalam field "tujuanPembelajaran".
+2. Rumusan "capaianPembelajaran" pada setiap butir soal WAJIB menggunakan CP resmi yang telah diinput di atas.
+3. Level kognitif ("levelKognitif") dan kesukaran ("difficulty") tiap butir soal WAJIB mengikuti urutan yang telah ditentukan di atas.
+4. Indikator soal ("indikator") wajib dirumuskan dengan format ABCD resmi Kemendikdasmen menggunakan Kata Kerja Operasional (KKO) yang selaras dengan level kognitif Bloom butir tersebut.
+5. ${customInstruction ? `Wajib memasukkan instruksi khusus pengguna: "${customInstruction}" ke dalam konteks stimulus atau soal.` : ''}
 
 Hasilkan respon HANYA dalam format JSON valid tanpa tanda markdown tambahan di luar blok JSON. Struktur JSON:
 {
@@ -795,11 +1370,12 @@ Hasilkan respon HANYA dalam format JSON valid tanpa tanda markdown tambahan di l
         {"key": "A", "text": "..."},
         {"key": "B", "text": "..."}
       ],
-      "correctKey": "A" (atau string kunci/kombinasi),
-      "correctKeys": ["A", "C"] (jika kompleks),
+      "correctKey": "A",
+      "correctKeys": ["A", "C"],
       "materi": "${topikCapaian}",
-      "capaianPembelajaran": "Rumusan CP",
-      "indikator": "Rumusan indikator soal",
+      "capaianPembelajaran": "${capaianPembelajaran || ''}",
+      "tujuanPembelajaran": "Tujuan Pembelajaran terpilih dari daftar TP di atas",
+      "indikator": "Rumusan indikator soal berbasis KKO",
       "levelKognitif": "C1" | "C2" | "C3" | "C4" | "C5" | "C6",
       "levelLabel": "Taraf kognitif",
       "difficulty": "Mudah" | "Sedang" | "Sulit",
@@ -846,7 +1422,6 @@ Hasilkan respon HANYA dalam format JSON valid tanpa tanda markdown tambahan di l
       return generateQuestionsLocally(config);
     }
 
-    // Attach SVGs for visual items if needed & ensure language fields
     const languageLabels = {
       id: 'Indonesia',
       en: 'English',
@@ -887,10 +1462,17 @@ Hasilkan respon HANYA dalam format JSON valid tanpa tanda markdown tambahan di l
           ? (idx < bilingualCountId ? 'id' : 'en')
           : (languageConfig.mode || 'id')
       );
+
+      const assignedTP = q.tujuanPembelajaran || tpList[idx % tpList.length];
+      const assignedCP = q.capaianPembelajaran || capaianPembelajaran || `Capaian Pembelajaran ${actualMapel} ${kelas}`;
+
       return {
         ...q,
         language: resolvedLang,
         languageLabel: languageLabels[resolvedLang] || 'Indonesia',
+        capaianPembelajaran: assignedCP,
+        tujuanPembelajaran: assignedTP,
+        materi: q.materi || topikCapaian,
         hasVisual,
         svgVisual: hasVisual ? generateSvgIllustration(visualType, `Diagram No. ${q.no} - ${actualMapel}`) : null
       };

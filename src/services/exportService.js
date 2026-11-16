@@ -350,13 +350,14 @@ export const exportKisiKisiToWord = (examConfig, questions) => {
   <table class="table-data">
     <thead>
       <tr>
-        <th width="5%">No.</th>
-        <th width="22%">Capaian Pembelajaran (CP)</th>
-        <th width="16%">Materi Pokok</th>
-        <th width="23%">Indikator Soal</th>
-        <th width="10%">Level Kognitif</th>
-        <th width="12%">Elemen Karakter</th>
-        <th width="12%">Bentuk Soal</th>
+        <th width="4%">No.</th>
+        <th width="18%">Capaian Pembelajaran (CP)</th>
+        <th width="18%">Tujuan Pembelajaran (TP)</th>
+        <th width="13%">Materi Pokok</th>
+        <th width="21%">Indikator Soal</th>
+        <th width="9%">Level Kognitif</th>
+        <th width="9%">Elemen Karakter</th>
+        <th width="8%">Bentuk Soal</th>
       </tr>
     </thead>
     <tbody>
@@ -367,6 +368,7 @@ export const exportKisiKisiToWord = (examConfig, questions) => {
     <tr>
       <td align="center" style="font-weight: bold;">${q.no}</td>
       <td>${q.capaianPembelajaran}</td>
+      <td>${q.tujuanPembelajaran || '-'}</td>
       <td><strong>${q.materi}</strong></td>
       <td>${q.indikator}</td>
       <td align="center"><strong>${q.levelKognitif}</strong><br><small>(${q.difficulty})</small></td>
@@ -448,6 +450,10 @@ export const exportKartuSoalToWord = (examConfig, questions) => {
         <tr>
           <td width="30%" style="background-color: #f8fafc; font-weight: bold;">Capaian Pembelajaran (CP)</td>
           <td>${q.capaianPembelajaran}</td>
+        </tr>
+        <tr>
+          <td style="background-color: #f8fafc; font-weight: bold;">Tujuan Pembelajaran (TP)</td>
+          <td><strong>${q.tujuanPembelajaran || '-'}</strong></td>
         </tr>
         <tr>
           <td style="background-color: #f8fafc; font-weight: bold;">Materi Pokok</td>

@@ -29,11 +29,12 @@ export default function TabKisiKisi({ examConfig, questions }) {
             <thead>
               <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold">
                 <th className="border border-slate-300 dark:border-slate-700 p-2 text-center w-10">No.</th>
-                <th className="border border-slate-300 dark:border-slate-700 p-2 w-48">Capaian Pembelajaran (CP)</th>
-                <th className="border border-slate-300 dark:border-slate-700 p-2 w-36">Materi Pokok</th>
+                <th className="border border-slate-300 dark:border-slate-700 p-2 w-44">Capaian Pembelajaran (CP)</th>
+                <th className="border border-slate-300 dark:border-slate-700 p-2 w-44">Tujuan Pembelajaran (TP)</th>
+                <th className="border border-slate-300 dark:border-slate-700 p-2 w-32">Materi Pokok</th>
                 <th className="border border-slate-300 dark:border-slate-700 p-2">Indikator Soal</th>
                 <th className="border border-slate-300 dark:border-slate-700 p-2 text-center w-24">Level Kognitif</th>
-                <th className="border border-slate-300 dark:border-slate-700 p-2 text-center w-36">Elemen Karakter</th>
+                <th className="border border-slate-300 dark:border-slate-700 p-2 text-center w-32">Elemen Karakter</th>
                 <th className="border border-slate-300 dark:border-slate-700 p-2 text-center w-28">Bentuk Soal</th>
               </tr>
             </thead>
@@ -45,6 +46,9 @@ export default function TabKisiKisi({ examConfig, questions }) {
                   </td>
                   <td className="border border-slate-300 dark:border-slate-700 p-2 text-slate-800 dark:text-slate-200 leading-snug">
                     {q.capaianPembelajaran}
+                  </td>
+                  <td className="border border-slate-300 dark:border-slate-700 p-2 text-slate-700 dark:text-slate-300 leading-snug font-medium">
+                    {q.tujuanPembelajaran || '-'}
                   </td>
                   <td className="border border-slate-300 dark:border-slate-700 p-2 font-semibold text-slate-900 dark:text-white leading-snug">
                     {q.materi}
